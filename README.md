@@ -9,7 +9,7 @@ Type `sudo raspi-config` to expand the filesystem, change the password and set t
 
 ## Setup smart-heating
 
-Clone this repository into your home folder. It should now look like this:
+Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`. It should now look like this:
 ```
 pi@jpi ~/smart-heating $ ls
 raspberry-pi  README.md
