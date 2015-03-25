@@ -59,9 +59,15 @@ Create symbolic links
 * udev rules: `sudo ln -s /home/pi/smart-heating/raspberry-pi/rules.d/90-local.rules /etc/udev/rules.d/`
 * tunslip executable: `sudo ln -s /home/pi/smart-heating/raspberry-pi/bin/tunslip6 /bin/`
 
+Add this line to `/etc/rc.local` to make sure it is also executed on startup
+```
+udevadm trigger --verbose --action=add --subsystem-match=usb --attr-match=idVendor=0403 --attr-match=idProduct=6001
+```
+
 Reboot: `sudo reboot`
 
-(Re-)attach the sky tmote usb dongle to the raspberry. Determine the ipv6 address of the web service: `less /var/log/tunslip6`:
+Attach the sky tmote usb dongle to the raspberry. The tun0 interface should be shown by `ifconfig`.  
+Determine the ipv6 address of the web service: `less /var/log/tunslip6`:
 
 ```
 Server IPv6 addresses:
