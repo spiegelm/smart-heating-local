@@ -7,6 +7,8 @@ Flash raspbian to a SD card and boot the Raspberry. Find the IP address using `n
 Open a SSH client and connect to the determined IP. The default username and password are `pi` and `raspberry`.
 Type `sudo raspi-config` to expand the filesystem, change the password and set the local time zone.
 
+Enable IPv6: Add `ipv6` on a line by itself at the end of /etc/modules.
+
 ## Setup smart-heating
 
 Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`. It should now look like this:
@@ -24,5 +26,7 @@ Create symbolic links
 
 * udev rules: `sudo ln -s /home/pi/smart-heating/raspberry-pi/rules.d/90-local.rules /etc/udev/rules.d/`
 * tunslip executable: `sudo ln -s /home/pi/smart-heating/raspberry-pi/bin/tunslip6 /bin/`
+
+Reboot: `sudo reboot`
 
 TODO
