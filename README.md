@@ -1,5 +1,3 @@
-# smart-heating
-
 # Setup
 
 ## Setup raspbian
@@ -27,3 +25,4 @@ Create symbolic links
 * udev rules: `sudo ln -s /home/pi/smart-heating/raspberry-pi/rules.d/90-local.rules /etc/udev/rules.d/`
 * tunslip executable: `sudo ln -s /home/pi/smart-heating/raspberry-pi/bin/tunslip6 /bin/`
 
+TODO
