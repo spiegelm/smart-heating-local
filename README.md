@@ -9,17 +9,49 @@ Type `sudo raspi-config` to expand the filesystem, change the password and set t
 
 Enable IPv6: Add `ipv6` on a line by itself at the end of /etc/modules.
 
+## Install dependencies
+
+Install `at`. Needed to remain tunslip6 started because UDEV rules kill the spawning process.
+```
+sudo apt-get install at
+```
+
+### Install Python 3.4.1 and aiocoap
+
+Credits to Marc Hüppin.
+
+> sudo apt-get install sqlite3 libsqlite3-dev
+> 
+> install the sqlite3 packages
+> 
+> ```
+> wget https://www.python.org/ftp/python/3.4.1/Python-3.4.1.tgz
+> ```
+> 
+> unpack
+> cd into dir
+> 
+> ```
+> ./configure
+> make
+> sudo make install
+> ```
+> 
+> get the aiocoap library from github: https://github.com/chrysn/aiocoap
+> 
+> get setuptools from: https://pypi.python.org/pypi/setuptools
+> 
+> install aiocoap using
+> ```
+> python3.4 setup.py install
+> ```
+
 ## Setup smart-heating
 
 Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`. It should now look like this:
 ```
 pi@jpi ~/smart-heating $ ls
 raspberry-pi  README.md
-```
-
-Install required software
-```
-sudo apt-get install at
 ```
 
 Create symbolic links
