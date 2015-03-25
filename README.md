@@ -29,4 +29,20 @@ Create symbolic links
 
 Reboot: `sudo reboot`
 
+(Re-)attach the sky tmote usb dongle to the raspberry. Determine the ipv6 address of the web service: `less /var/log/tunslip6`:
+
+```
+Server IPv6 addresses:
+ fdfd::212:7400:115e:a9e5
+ fe80::212:7400:115e:a9e5
+```
+
+Retrieve the registered routes on the border router: `wget http://[fdfd::212:7400:115e:a9e5]`:
+```
+<html><head><title>ContikiRPL</title></head><body>
+Neighbors<pre>fe80::221:2eff:ff00:22d3
+</pre>Routes<pre>fdfd::221:2eff:ff00:22d3/128 (via fe80::221:2eff:ff00:22d3) 16711422s
+</pre></body></html>
+```
+
 TODO
