@@ -5,7 +5,7 @@
 Flash raspbian to a SD card and boot the Raspberry. Find the IP address using `nmap -sP [ip-adress]/[bitmask]`, e.g. `nmap -sP 192.168.0.0/24`.
 
 Open a SSH client and connect to the determined IP. The default username and password are `pi` and `raspberry`.
-Type `sudo raspi-config` to expand the filesystem and change the password.
+Type `sudo raspi-config` to expand the filesystem, change the password and set the local time zone.
 
 ## Setup smart-heating
 
