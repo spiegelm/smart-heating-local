@@ -83,4 +83,11 @@ Neighbors<pre>fe80::221:2eff:ff00:22d3
 </pre></body></html>
 ```
 
+Test route to the thermostat by requesting the current temperature via coap-client (libcoap): `~/smart-heating/raspberry-pi/bin/coap-client -m get coap://[fdfd::221:2eff:ff00:22d3]/sensors/temperature`
+```
+v:1 t:0 tkl:0 c:1 id:11708
+22.49
+```
+
 TODO
+
