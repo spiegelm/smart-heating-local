@@ -12,5 +12,5 @@ class ThermostatSerializer(serializers.ModelSerializer):
 class ResidenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Residence
-        fields = ('rfid')
+        fields = ('rfid',)
 

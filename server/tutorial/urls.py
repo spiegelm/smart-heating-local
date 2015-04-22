@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from rest_framework import routers
 
 #from rest_framework import routers
 #from snippets import views
@@ -15,7 +16,6 @@ from django.contrib import admin
 #]
 
 urlpatterns = [
-    url(r'^', include('snippets.urls')),
     url(r'^', include('smart_heating.urls')),
 ]
 
