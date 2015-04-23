@@ -10,9 +10,39 @@ class Residence(models.Model):
         ordering = ('rfid',)
 
 
+class User(models.Model):
+    imei = models.CharField(primary_key=True, max_length=100)
+    name = models.CharField(max_length=100)
+    residence = models.ForeignKey('Residence')
+
+    class Meta:
+        ordering = ('imei',)
+
+
+class Room(models.Model):
+    # id is automatically generated
+    # id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=100)
+    residence = models.ForeignKey('Residence')
+
+    class Meta:
+        ordering = ('name',)
+
+# TODO model the heating table
+# class HeatingTable(models.Model):
+
+
 class Thermostat(models.Model):
     rfid = models.CharField(primary_key=True, max_length=100)
-    temperature = models.FloatField()
+    room = models.ForeignKey('Room')
 
     class Meta:
         ordering = ('rfid',)
+
+
+class Temperature(models.Model):
+    datetime = models.DateTimeField(primary_key=True)
+    value = models.FloatField()
+
+    class Meta:
+        ordering = ('datetime',)

@@ -39,3 +39,9 @@ class ResidenceViewSet(viewsets.ModelViewSet):
     """
     queryset = Residence.objects.all()
     serializer_class = ResidenceSerializer
+
+
+class RoomViewSet(viewsets.ModelViewSet):
+
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer

@@ -3,14 +3,25 @@ from rest_framework import serializers
 from smart_heating.models import *
 
 
+class ResidenceSerializer(serializers.HyperlinkedModelSerializer):
+    #rooms = serializers.HyperlinkedRelatedField(
+    #    queryset=Room.objects.all(), many=True, view_name='room-detail')
+
+    class Meta:
+        model = Residence
+        # fields = ('url', 'rfid', 'rooms')
+        fields = ('url', 'rfid')
+
+
+class RoomSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Room
+        fields = ('url', 'name', 'residence')
+
+
 class ThermostatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thermostat
         fields = ('rfid', 'temperature')
 
-
-class ResidenceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Residence
-        fields = ('rfid',)
 
