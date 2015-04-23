@@ -23,7 +23,7 @@ class Room(models.Model):
     # id is automatically generated
     # id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
-    residence = models.ForeignKey('Residence')
+    residence = models.ForeignKey('Residence', related_name='rooms')
 
     class Meta:
         ordering = ('name',)

@@ -16,7 +16,8 @@ class ResidenceSerializer(serializers.HyperlinkedModelSerializer):
 class RoomSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Room
-        fields = ('url', 'name', 'residence')
+        #fields = ('url', 'id', 'name', 'residence')
+        fields = ('id', 'name', 'residence')
 
 
 class ThermostatSerializer(serializers.ModelSerializer):

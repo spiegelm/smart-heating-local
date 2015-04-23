@@ -1,36 +1,11 @@
-from django.shortcuts import render
-
 # Create your views here.
 
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
+from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework import viewsets
+from rest_framework.response import Response
 
-
-from smart_heating.models import *
 from smart_heating.serializers import *
-
-class JSONResponse(HttpResponse):
-    """
-    An HttpResponse that renders its content into JSON.
-    """
-    def __init__(self, data, **kwargs):
-        content = JSONRenderer().render(data)
-        kwargs['content_type'] = 'application/json'
-        super(JSONResponse, self).__init__(content, **kwargs)
-
-
-@csrf_exempt
-def thermostat_list(request):
-    """
-    List all
-    """
-    if request.method == 'GET':
-        thermostats = Thermostat.objects.all()
-        serializer = ThermostatSerializer(thermostats, many=True)
-        return JSONResponse(serializer.data)
 
 
 class ResidenceViewSet(viewsets.ModelViewSet):
@@ -45,3 +20,15 @@ class RoomViewSet(viewsets.ModelViewSet):
 
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+
+    def list(self, request, residence):
+        queryset = self.get_queryset()
+        list = get_list_or_404(queryset, residence=residence)
+        serializer = RoomSerializer(list, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, residence, pk):
+        queryset = self.get_queryset()
+        user = get_object_or_404(queryset, pk=pk, residence=residence)
+        serializer = RoomSerializer(user, context={'request': request})
+        return Response(serializer.data)
