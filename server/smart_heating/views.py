@@ -21,6 +21,14 @@ class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
+    # TODO require the residence for all queries in a unified way
+
+    # def get_queryset(self, residence):
+    #     queryset = Room.objects.filter(residence=residence)
+    #     # queryset = Room.objects.all()
+    #     return queryset
+
+
     def list(self, request, residence):
         queryset = self.get_queryset()
         list = get_list_or_404(queryset, residence=residence)
