@@ -23,6 +23,5 @@ class RoomSerializer(serializers.HyperlinkedModelSerializer):
 class ThermostatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Thermostat
-        fields = ('rfid', 'temperature')
-
+        fields = ('rfid', 'room')
 

@@ -34,7 +34,7 @@ class Room(models.Model):
 
 class Thermostat(models.Model):
     rfid = models.CharField(primary_key=True, max_length=100)
-    room = models.ForeignKey('Room')
+    room = models.ForeignKey('Room', related_name='thermostats')
 
     class Meta:
         ordering = ('rfid',)
