@@ -1,3 +1,5 @@
+REST Server (server branch) [![Build Status](https://magnum.travis-ci.com/spiegelm/smart-heating.svg?token=uqu5q9gC3ZDdywezju6y&branch=server)](https://magnum.travis-ci.com/spiegelm/smart-heating)
+
 # Setup
 
 ## Setup raspbian
