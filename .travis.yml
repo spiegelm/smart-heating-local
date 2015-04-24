@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.3"
+  - "3.4"
+  - "nightly"
+# install dependencies
+install:
+  - pip install -r server/requirements.txt
+script:
+  - cd server && python manage.py test
