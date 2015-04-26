@@ -9,6 +9,12 @@ class Residence(models.Model):
     class Meta:
         ordering = ('rfid',)
 
+    def __str__(self):
+        """
+        Used to generate the url
+        """
+        return self.rfid
+
 
 class User(models.Model):
     imei = models.CharField(primary_key=True, max_length=100)

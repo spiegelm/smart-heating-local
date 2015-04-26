@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponseBadRequest
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 
 from smart_heating.serializers import *
 
@@ -25,7 +26,10 @@ class RoomViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self, residence):
         queryset = Room.objects.filter(residence=residence)
+        # http://stackoverflow.com/questions/21292646/capture-parameters-in-django-rest-framework
+        # uid = self.kwargs.get(self.lookup_url_kwarg)
         return queryset
+
 
     def list(self, request, residence):
         queryset = self.get_queryset(residence)
@@ -36,7 +40,11 @@ class RoomViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset(residence)
         user = get_object_or_404(queryset, pk=pk, residence=residence)
         serializer = RoomSerializer(user, context={'request': request})
-        return Response(serializer.data)
+        # TODO resolve the url via the RoomSerializer,
+        # such that it can also be shown in the residence resource
+        data = serializer.data
+        # data['url'] = reverse('room-detail', args=[residence, pk], request=request)
+        return Response(data)
 
 
 class ThermostatViewSet(viewsets.ModelViewSet):
