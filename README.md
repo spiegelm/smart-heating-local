@@ -68,9 +68,12 @@ Add this line to `/etc/rc.local` to make sure it is also executed on startup
 udevadm trigger --verbose --action=add --subsystem-match=usb --attr-match=idVendor=0403 --attr-match=idProduct=6001
 ```
 
+TODO check the line above. It doesn't seem to be working.
+
 Reboot: `sudo reboot`
 
-Attach the sky tmote usb dongle to the raspberry. The tun0 interface should be shown by `ifconfig`.  
+Attach the sky tmote usb dongle to the raspberry. The tun0 interface should be shown by `ifconfig`.
+In case of problems run `sudo ~/smart-heating/raspberry-pi/src/start_tunslip.sh` manually.
 Determine the ipv6 address of the web service: `less /var/log/tunslip6`:
 
 ```
