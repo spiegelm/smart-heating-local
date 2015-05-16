@@ -18,13 +18,17 @@ sudo apt-get install at
 
 ### Install Python 3.4.1 and aiocoap
 
-Credits to Marc Hüppin.
+Credits to Marc Hüppin for the initial version.
 
-> sudo apt-get install sqlite3 libsqlite3-dev
+openssl and libssl-dev are required for SSL support in python and is required by pip.
+
+> sudo apt-get install sqlite3 libsqlite3-dev openssl libssl-dev
 > 
 > install the sqlite3 packages
 > 
 > ```
+> mkdir ~/src
+> cd ~/src
 > wget https://www.python.org/ftp/python/3.4.1/Python-3.4.1.tgz
 > ```
 > 
@@ -89,5 +93,15 @@ v:1 t:0 tkl:0 c:1 id:11708
 22.49
 ```
 
-TODO
+Congratulations, your raspberry is connected to a thermostat!
 
+### Install the required python packages
+
+Install pip: https://pip.pypa.io/en/latest/installing.html
+
+Install the project requirements:
+
+```
+cd ~/smart-heating/raspberry-pi/
+pip install -r requirements.txt
+```
