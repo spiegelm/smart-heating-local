@@ -34,14 +34,26 @@ def parse_coap_response_code(response_code):
     response_code_detail = response_code % 32
     
     # compose response code
-    return response_code_class + response_code_detail / 100; # returns a float
+    return response_code_class + response_code_detail / 100 # returns a float
     #return str(response_code_class) + ".{:02d}".format(response_code_detail) # returns a string
+
+def ipv6(mac_addr):
+    # Convert MAC 2e:ff:ff:00:22:8b into IPv6 2eff:ff00:228b
+    bytes = mac_addr.replace(':', '')
+    ip = ''
+    for index, part in enumerate(bytes):
+        ip += part
+        if index % 4 == 3 and index < len(bytes) - 1:
+            ip += ':'
+    # Prefix from border router
+    return 'fdfd::221:' + ip
 
 @asyncio.coroutine
 def get_temperature(thermostat):
 
     mac = thermostat[0]
-    url = 'coap://[fdfd::' + mac + ']/sensors/temperature'
+    url = 'coap://[' + ipv6(mac) + ']/sensors/temperature'
+    print(url)
     timestamp = str(datetime.datetime.now())
 
     protocol = yield from Context.create_client_context()
@@ -59,7 +71,7 @@ def get_temperature(thermostat):
         print('Result: %s\n%r'%(response.code, payload))
 
         code = parse_coap_response_code(response.code)
-        if code >= 2 and code < 3:
+        if 2 <= code < 3:
             temperature = float(response.payload)
             results.append([mac, timestamp, temperature])
 
@@ -71,7 +83,7 @@ def get_temperature(thermostat):
 @asyncio.coroutine
 def get_heartbeat(thermostat):
     mac = thermostat[0]
-    url = 'coap://[fdfd::' + mac + ']/debug/heartbeat'
+    url = 'coap://[' + ipv6(mac) + ']/debug/heartbeat'
     timestamp = str(datetime.datetime.now())
     
     protocol = yield from Context.create_client_context()
@@ -111,9 +123,11 @@ def execute_tasks(tasks):
 
 
 def main():
+    # TODO get thermostat MACs via linked_thermostats.py
+
     thermostats = [ \
-        ('221:2eff:ff00:228b', 'Bedroom Michi'), \
-        ('221:2eff:ff00:228b', 'Bedroom Michi Again'), \
+        ('2e:ff:ff:00:22:8b', 'Bedroom Michi'), \
+        ('2e:ff:ff:00:22:8b', 'Bedroom Michi again'), \
     ]
 
     conn = sqlite3.connect('/home/pi/heating.db')
