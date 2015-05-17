@@ -126,9 +126,8 @@ def execute_tasks(tasks):
 def main():
     # TODO get thermostat MACs via server.py
 
-    thermostats = [ \
-        ('2e:ff:ff:00:22:8b', 'Bedroom Michi'), \
-        ('2e:ff:ff:00:22:8b', 'Bedroom Michi again'), \
+    thermostats = [
+        ('2e:ff:ff:00:22:8b', 'Bedroom Michi'),
     ]
 
     conn = sqlite3.connect('/home/pi/smart-heating/raspberry-pi/heating.db')
