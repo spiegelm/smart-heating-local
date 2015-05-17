@@ -8,6 +8,11 @@ from server import Server
 import sys
 import requests
 
+def print_err(*args, **kwargs):
+    stdout = kwargs.pop('stdout', True)
+    print(file=sys.stderr, *args, **kwargs)
+    if stdout:
+        print(*args, **kwargs)
 
 def main():
 
@@ -29,15 +34,15 @@ def main():
         except requests.ConnectionError as e:
             # TODO maybe use our own exception (information hiding)
             # Log connection error but don't mark it as a permanent error
-            print('error uploading: %s' % repr(measurement), file=sys.stderr)
-            print('ConnectionError: %s' % e)
+            print_err('error uploading: %s' % repr(measurement))
+            print_err('%s: %s' % (e.__class__.__name__, e))
         except Exception as e:
             # TODO update linked thermostats list. maybe we're trying to access a non linked thermostat
             # Don't mark as permanent error for now. Watch the logs what kind of errors these are
             # conn.execute(update_status_sql, {'status': TemperatureMeasurement.STATUS_ERROR, 'mac': measurement.mac, 'date': measurement.date})
             # conn.commit()
-            print('error uploading %s' % repr(measurement), file=sys.stderr)
-            print(traceback.format_exc(), file=sys.stderr)
+            print_err('error uploading %s' % repr(measurement))
+            print_err(traceback.format_exc(), stdout=False)
 
     conn.close()
 
