@@ -17,9 +17,10 @@ from aiocoap import *
 
 import copy, sys
 
+from models import *
+
 
 logging.basicConfig(level=logging.INFO)
-
 
 
 # Temperature regex (make sure we only match temperature)
@@ -34,15 +35,27 @@ def parse_coap_response_code(response_code):
     response_code_detail = response_code % 32
     
     # compose response code
-    return response_code_class + response_code_detail / 100; # returns a float
+    return response_code_class + response_code_detail / 100 # returns a float
     #return str(response_code_class) + ".{:02d}".format(response_code_detail) # returns a string
+
+def ipv6(mac_addr):
+    # Convert MAC 2e:ff:ff:00:22:8b into IPv6 2eff:ff00:228b
+    bytes = mac_addr.replace(':', '')
+    ip = ''
+    for index, part in enumerate(bytes):
+        ip += part
+        if index % 4 == 3 and index < len(bytes) - 1:
+            ip += ':'
+    # Prefix from border router
+    return 'fdfd::221:' + ip
 
 @asyncio.coroutine
 def get_temperature(thermostat):
 
     mac = thermostat[0]
-    url = 'coap://[fdfd::' + mac + ']/sensors/temperature'
-    timestamp = str(datetime.datetime.now())
+    url = 'coap://[' + ipv6(mac) + ']/sensors/temperature'
+    print(url)
+    timestamp = str(datetime.now())
 
     protocol = yield from Context.create_client_context()
     
@@ -59,7 +72,7 @@ def get_temperature(thermostat):
         print('Result: %s\n%r'%(response.code, payload))
 
         code = parse_coap_response_code(response.code)
-        if code >= 2 and code < 3:
+        if 2 <= code < 3:
             temperature = float(response.payload)
             results.append([mac, timestamp, temperature])
 
@@ -71,8 +84,8 @@ def get_temperature(thermostat):
 @asyncio.coroutine
 def get_heartbeat(thermostat):
     mac = thermostat[0]
-    url = 'coap://[fdfd::' + mac + ']/debug/heartbeat'
-    timestamp = str(datetime.datetime.now())
+    url = 'coap://[' + ipv6(mac) + ']/debug/heartbeat'
+    timestamp = str(datetime.now())
     
     protocol = yield from Context.create_client_context()
     
@@ -89,7 +102,7 @@ def get_heartbeat(thermostat):
         print('Result: %s\n%r'%(response.code, payload))
 
         code = parse_coap_response_code(response.code)    
-        if code >= 2 and code < 3:
+        if 2 <= code < 3:
             version, uptime, rssi = map(lambda x: x.split(':')[1], str(payload).split(','))
             print (version, uptime, rssi)
             results.append([mac, timestamp, rssi])
@@ -111,18 +124,24 @@ def execute_tasks(tasks):
 
 
 def main():
-    thermostats = [ \
-        ('221:2eff:ff00:228b', 'Bedroom Michi'), \
-        ('221:2eff:ff00:228b', 'Bedroom Michi Again'), \
+    # TODO get thermostat MACs via server.py
+
+    thermostats = [
+        ('2e:ff:ff:00:22:8b', 'Bedroom Michi'),
     ]
 
-    conn = sqlite3.connect('/home/pi/heating.db')
+    conn = sqlite3.connect('/home/pi/smart-heating/raspberry-pi/heating.db')
 
     # Make sure local tables are available
-    create_temperature_table_sql = "CREATE TABLE IF NOT EXISTS heating_temperature \
-                (mac CHAR(20), timestamp TIMESTAMP, temperature FLOAT);"
-    create_rssi_table_sql = "CREATE TABLE IF NOT EXISTS heating_rssi \
-                (mac CHAR(20), timestamp TIMESTAMP, rssi FLOAT);"
+    create_temperature_table_sql = "CREATE TABLE IF NOT EXISTS heating_temperature (" \
+                                   "mac CHAR(20) NOT NULL," \
+                                   "timestamp TIMESTAMP NOT NULL," \
+                                   "temperature FLOAT NOT NULL," \
+                                   "status INTEGER NOT NULL);"
+    create_rssi_table_sql = "CREATE TABLE IF NOT EXISTS heating_rssi (" \
+                            "mac CHAR(20) NOT NULL," \
+                            "timestamp TIMESTAMP NOT NULL," \
+                            "rssi FLOAT NOT NULL);"
     conn.execute(create_temperature_table_sql)
     conn.execute(create_rssi_table_sql)
     conn.commit()
@@ -140,8 +159,8 @@ def main():
         print (mac, ts, temp)
 
 
-    new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +")" for mac, ts, temp in temp_measurements])
-    cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature) VALUES " + new_values + ";")
+    new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")" for mac, ts, temp in temp_measurements])
+    cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
 
     # Get RSSI values
     rssi_measurements = execute_tasks([asyncio.async(get_heartbeat(t)) for t in thermostats])
