@@ -22,7 +22,9 @@ def main():
     rows = r.fetchall()
     measurements = [TemperatureMeasurement(*row) for row in rows]
 
-    # print(repr(measurements))
+    # TODO improve error handling
+    # test for internet connection first
+    # handle unlinked or invalid thermostat MACs
 
     for measurement in measurements:
         update_status_sql = 'UPDATE heating_temperature SET status=:status WHERE mac=:mac AND timestamp=:date'
