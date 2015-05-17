@@ -52,6 +52,8 @@ openssl and libssl-dev are required for SSL support in python and is required by
 
 ## Setup smart-heating
 
+### Setup the border router connection
+
 Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`. It should now look like this:
 ```
 pi@jpi ~/smart-heating $ ls
@@ -108,3 +110,17 @@ Install the project requirements:
 cd ~/smart-heating/raspberry-pi/
 pip install -r requirements.txt
 ```
+
+### Configure cron tasks
+
+Setup crontab to run the log and upload scripts periodically.
+
+```
+crontab -e
+# Insert these lines at the end of the file:
+*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/raspberry-pi/src/log_temperature.py >> /home/pi/smart-heating/raspberry-pi/src/log_temperature.log 2>>  /home/pi/smart-heating/raspberry-pi/src/log_temperature.err
+*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/raspberry-pi/src/upload.py >> /home/pi/smart-heating/raspberry-pi/src/upload.log 2>>  /home/pi/smart-heating/raspberry-pi/src/upload.err
+```
+
+These commands ensure that the temperature is polled from the registered thermostats and uploaded to the server each 5 minutes but independently from each other.
+The output on `stdout` and `stderr` is logged to different files within the raspberry-pi directory. This logging mechanism was chosen for debugging purposes. However a simpler logging could also suffice your needs.
