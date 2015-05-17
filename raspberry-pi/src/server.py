@@ -4,6 +4,11 @@ import json
 import requests
 import subprocess
 
+class HttpError(Exception):
+    def __init__(self, *args, **kwargs):
+        self.permanent = kwargs.get('permanent', False)
+        self.response = kwargs.get('response')
+
 
 class Server:
     SERVER_URL = 'http://52.28.68.182:8000/'
@@ -54,7 +59,17 @@ class Server:
         r = requests.post(self.temperature_url(thermostat_url), data=data, headers=headers)
 
         if not (200 <= r.status_code < 300):
-            raise Exception('Failed to upload measurement %s, Result: %s' % (temperature_measurement, r))
+            # Handle error
+            default_exception = HttpError('Failed to upload measurement %s, Result: %s %s' %
+                                          (temperature_measurement, r.status_code, r.text))
+
+            if r.status_code == 400:
+                # TODO check for certain conditions that indicate a permanent error
+                # e.g. r.json=={"datetime":["This field must be unique."]}
+                # permanent_exception = default_exception
+                # permanent_exception.permanent = True
+                pass
+            raise default_exception
 
     def get_thermostats_macs(self):
 
