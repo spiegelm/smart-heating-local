@@ -5,6 +5,8 @@ import traceback
 
 from models import TemperatureMeasurement
 from server import Server
+import sys
+import requests
 
 
 def main():
@@ -15,7 +17,7 @@ def main():
     rows = r.fetchall()
     measurements = [TemperatureMeasurement(*row) for row in rows]
 
-    print(repr(measurements))
+    # print(repr(measurements))
 
     for measurement in measurements:
         update_status_sql = 'UPDATE heating_temperature SET status=:status WHERE mac=:mac AND timestamp=:date'
@@ -23,12 +25,19 @@ def main():
             Server().upload_measurement(measurement)
             conn.execute(update_status_sql, {'status': TemperatureMeasurement.STATUS_SENT, 'mac': measurement.mac, 'date': measurement.date})
             conn.commit()
-            print('uploaded %s successfully' % repr(measurement))
-        except:
-            conn.execute(update_status_sql, {'status': TemperatureMeasurement.STATUS_ERROR, 'mac': measurement.mac, 'date': measurement.date})
-            conn.commit()
-            print('error uploading %s' % repr(measurement))
-            print(traceback.format_exc())
+            print('upload successful: %s ' % repr(measurement))
+        except requests.ConnectionError as e:
+            # TODO maybe use our own exception (information hiding)
+            # Log connection error but don't mark it as a permanent error
+            print('error uploading: %s' % repr(measurement), file=sys.stderr)
+            print('ConnectionError: %s' % e)
+        except Exception as e:
+            # TODO update linked thermostats list. maybe we're trying to access a non linked thermostat
+            # Don't mark as permanent error for now. Watch the logs what kind of errors these are
+            # conn.execute(update_status_sql, {'status': TemperatureMeasurement.STATUS_ERROR, 'mac': measurement.mac, 'date': measurement.date})
+            # conn.commit()
+            print('error uploading %s' % repr(measurement), file=sys.stderr)
+            print(traceback.format_exc(), file=sys.stderr)
 
     conn.close()
 
