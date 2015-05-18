@@ -97,27 +97,16 @@ class Server:
             raise Exception('This raspberry has not been linked to a residence! '
                             'This should be done by the user!')
 
-        thermostats = self.get_thermostats_by_residence(residence_data.get('url'))
+        thermostats_data = raspberry_data.get('thermostat_devices')
+        thermostats_rfids = [thermo.rfid for thermo in thermostats_data]
 
-        return thermostats
-
-    def get_thermostats_by_residence(self, residence_url):
-        rooms_url = residence_url + 'room/'
-        r = requests.get(rooms_url)
-        rooms = r.json()
-        thermostats = []
-        for room in rooms:
-            thermostats.extend(self.get_thermostats_by_room(room.get('url')))
-
-        return thermostats
-
+        return thermostats_rfids
 
     def get_thermostats_by_room(self, room_url):
         thermostats_url = room_url + 'thermostat/'
         r = requests.get(thermostats_url)
         thermostats = r.json()
         return thermostats
-
 
     def get_local_mac_address(self):
         """
