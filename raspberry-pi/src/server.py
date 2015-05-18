@@ -5,10 +5,12 @@ import requests
 import subprocess
 
 class HttpError(Exception):
-    def __init__(self, *args, **kwargs):
-        self.permanent = kwargs.get('permanent', False)
-        self.response = kwargs.get('response')
+    def __init__(self, response, *args, permanent=False, **kwargs):
+        self.permanent = permanent
+        self.response = response
 
+class NotFoundException(HttpError):
+    pass
 
 class Server:
     SERVER_URL = 'http://52.28.68.182:8000/'
