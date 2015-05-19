@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import shelve
 
 import subprocess
 import sqlite3
@@ -18,10 +19,10 @@ from aiocoap import *
 import copy, sys
 
 from models import *
-
+from server import Server
+from server_models import RaspberryDevice
 
 logging.basicConfig(level=logging.INFO)
-
 
 # Temperature regex (make sure we only match temperature)
 #temp_regex = r'\d{2}\.\d{2}'
@@ -124,11 +125,16 @@ def execute_tasks(tasks):
 
 
 def main():
-    # TODO get thermostat MACs via server.py
-
-    thermostats = [
-        ('2e:ff:ff:00:22:8b', 'Bedroom Michi'),
-    ]
+    # Load config from shelve
+    with shelve.open('config') as config:
+        thermostat_macs = config.get('thermostat_macs', None)
+        if thermostat_macs is None:
+            # No thermostats configured
+            # TODO may trigger a manual sync?
+            logging.error('No thermostats defined in local config!')
+            return
+        # Store thermostats
+        thermostats = [(mac, 'Stub name') for mac in thermostat_macs]
 
     conn = sqlite3.connect('/home/pi/smart-heating/raspberry-pi/heating.db')
 
