@@ -2,7 +2,7 @@
 
 import unittest
 from server import Server
-from server_models import RaspberryDevice
+from server_models import *
 
 
 class ServerTestCase(unittest.TestCase):
@@ -20,9 +20,12 @@ class ServerTestCase(unittest.TestCase):
     def test_get_thermostats_by_residence(self):
         local_mac = self.server.get_local_mac_address()
 
-        raspberry = RaspberryDevice(mac=local_mac)
-        self.assertEqual(len(raspberry.thermostat_devices), 1)
-        self.assertEqual(raspberry.thermostat_devices[0].get('mac'), '2e:ff:ff:00:22:8b')
+        raspberry = RaspberryDevice.load(mac=local_mac)
+        thermostat_devices = raspberry.thermostat_devices
+        self.assertEqual(len(thermostat_devices), 1)
+        thermostat_device = thermostat_devices[0]
+        self.assertIsInstance(thermostat_device, ThermostatDevice)
+        self.assertEqual(thermostat_device.mac, '2e:ff:ff:00:22:8b')
 
 
 if __name__ == '__main__':

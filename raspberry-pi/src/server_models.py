@@ -12,33 +12,57 @@ class RaspberryDevice(Model):
     # Attribute to allow dependency injection
     requests = requests
 
-    def __init__(self, rfid=None, mac=None):
-        url = self.__url(rfid=rfid, mac=mac)
-        r = self.requests.get(url)
-        assert(200 <= r.status_code < 300)
-
-        self.__setup(r.json())
-
-    def __setup(self, json):
+    def __init__(self, json):
         self.__json = json
 
         self.rfid = json.get('rfid')
         self.mac = json.get('mac')
         self.url = json.get('url')
-        self.residence = json.get('residence')
-        self.thermostat_devices = json.get('thermostat_devices')
+        self.residence = Residence(json.get('residence'))
+        self.thermostat_devices = [ThermostatDevice(thermostat_json) for thermostat_json in json.get('thermostat_devices')]
 
-    def __lookup_url(self, mac):
-        url = self.SERVER_URL + self.RESOURCE_URL + self.LOOKUP_MAC_SUFFIX_PATTERN.format(mac=mac)
+    @staticmethod
+    def load(rfid=None, mac=None):
+        url = RaspberryDevice.__url(rfid=rfid, mac=mac)
+        r = RaspberryDevice.requests.get(url)
+        assert(200 <= r.status_code < 300)
+        return RaspberryDevice(r.json())
+
+    @staticmethod
+    def __lookup_url(mac):
+        url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + RaspberryDevice.LOOKUP_MAC_SUFFIX_PATTERN.format(mac=mac)
         return url
 
-    def __url(self, rfid=None, mac=None):
+    @staticmethod
+    def __url(rfid=None, mac=None):
         if (rfid is None) == (mac is None):
             raise Exception('Either rfid or mac is required')
 
         if mac is not None:
-            url = self.SERVER_URL + self.RESOURCE_URL + self.LOOKUP_MAC_SUFFIX_PATTERN.format(mac=mac)
+            url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + RaspberryDevice.LOOKUP_MAC_SUFFIX_PATTERN.format(mac=mac)
         else:
             assert rfid is not None
-            url = self.SERVER_URL + self.RESOURCE_URL + rfid + '/'
+            url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + rfid + '/'
         return url
+
+
+class ThermostatDevice(Model):
+
+    def __init__(self, json):
+        self.rfid = json.get('rfid')
+        self.mac = json.get('mac')
+        self.url = json.get('url')
+        self.thermostat = Thermostat(json.get('thermostat'))
+
+
+class Residence(Model):
+    def __init__(self, json):
+        self.rfid = json.get('rfid')
+        self.url = json.get('url')
+
+
+class Thermostat(Model):
+    def __init__(self, json):
+        self.rfid = json.get('rfid')
+        self.url = json.get('url')
+        self.temperatures_url = json.get('temperatures_url')
