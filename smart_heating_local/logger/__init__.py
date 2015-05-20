@@ -12,7 +12,7 @@ class NoRequestsModuleFilter(logging.Filter):
 log_formatter = logging.Formatter(logging_format)
 root_logger = logging.getLogger()
 
-file_handler = logging.FileHandler('upload.log')
+file_handler = logging.FileHandler('logs/smart-heating.log')
 file_handler.setFormatter(log_formatter)
 file_handler.addFilter(NoRequestsModuleFilter())
 root_logger.addHandler(file_handler)
