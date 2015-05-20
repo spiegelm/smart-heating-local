@@ -11,21 +11,11 @@ from server_models import RaspberryDevice
 import sys
 import requests
 
-logging_format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-logging.basicConfig(level=logging.INFO, format=logging_format)
-# logging.basicConfig(filename='upload.log', level=logging.INFO, format=logging_format)
-
-log_formatter = logging.Formatter(logging_format)
-root_logger = logging.getLogger()
-
-file_handler = logging.FileHandler('upload.log')
-file_handler.setFormatter(log_formatter)
-root_logger.addHandler(file_handler)
-
+import logger
 
 def download_linked_thermostats():
 
-    logging.info('Fetch linked thermostats.')
+    logging.info('Start fetching linked thermostats.')
 
     # Detect local mac address
     local_mac = Server().get_local_mac_address()
@@ -35,10 +25,12 @@ def download_linked_thermostats():
     thermostat_devices = raspberry.thermostat_devices
     thermostat_macs = [thermostat_device.mac for thermostat_device in thermostat_devices]
 
+    logging.info('End fetching linked thermostats.')
+
     with shelve.open('config') as config:
         config['thermostat_macs'] = thermostat_macs
         config.sync()
-        logging.info('Wrote thermostat MACs to shelf "config".')
+        logging.info('Wrote downloaded thermostat MACs to shelf "config".')
         config.close()
 
 

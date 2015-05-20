@@ -22,7 +22,7 @@ from models import *
 from server import Server
 from server_models import RaspberryDevice
 
-logging.basicConfig(level=logging.INFO)
+import logger
 
 # Temperature regex (make sure we only match temperature)
 #temp_regex = r'\d{2}\.\d{2}'
