@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import shelve
 
 import subprocess
@@ -17,12 +16,11 @@ import asyncio
 from aiocoap import *
 
 import copy, sys
+from smart_heating_local.config import Config
 
-from models import *
-from server import Server
-from server_models import RaspberryDevice
+from smart_heating_local.models import *
 
-import logger
+import smart_heating_local.logger
 
 # Temperature regex (make sure we only match temperature)
 #temp_regex = r'\d{2}\.\d{2}'
@@ -126,17 +124,17 @@ def execute_tasks(tasks):
 
 def main():
     # Load config from shelve
-    with shelve.open('config') as config:
-        thermostat_macs = config.get('thermostat_macs', None)
-        if thermostat_macs is None:
-            # No thermostats configured
-            # TODO may trigger a manual sync?
-            logging.error('No thermostats defined in local config!')
-            return
-        # Store thermostats
-        thermostats = [(mac, 'Stub name') for mac in thermostat_macs]
+    config = Config()
+    thermostat_macs = config.get_thermostat_macs()
+    if thermostat_macs is None:
+        # No thermostats configured
+        # TODO may trigger a manual sync?
+        logging.error('No thermostats defined in local config!')
+        return
+    # Store thermostats
+    thermostats = [(mac, 'Stub name') for mac in thermostat_macs]
 
-    conn = sqlite3.connect('/home/pi/smart-heating/raspberry-pi/heating.db')
+    conn = sqlite3.connect('/home/pi/smart-heating/data/heating.db')
 
     # Make sure local tables are available
     create_temperature_table_sql = "CREATE TABLE IF NOT EXISTS heating_temperature (" \

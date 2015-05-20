@@ -1,5 +1,4 @@
-heating.db
-*.err
+.idea/
 
 ## https://github.com/github/gitignore/blob/master/Python.gitignore
 

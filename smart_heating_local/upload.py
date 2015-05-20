@@ -4,14 +4,15 @@ import shelve
 
 import sqlite3
 import traceback
+from smart_heating_local.config import Config
 
-from models import TemperatureMeasurement
-from server import Server
-from server_models import RaspberryDevice
+from smart_heating_local.models import TemperatureMeasurement
+from smart_heating_local.server import Server
+from smart_heating_local.server_models import RaspberryDevice
 import sys
 import requests
 
-import logger
+import smart_heating_local.logger
 
 def download_linked_thermostats():
 
@@ -27,16 +28,14 @@ def download_linked_thermostats():
 
     logging.info('End fetching linked thermostats.')
 
-    with shelve.open('config') as config:
-        config['thermostat_macs'] = thermostat_macs
-        config.sync()
-        logging.info('Wrote downloaded thermostat MACs to shelf "config".')
-        config.close()
+    config = Config()
+    config.save_thermostat_macs(thermostat_macs)
+    logging.info('Wrote downloaded thermostat MACs to config.')
 
 
 def upload_measurements():
 
-    conn = sqlite3.connect('/home/pi/smart-heating/raspberry-pi/heating.db')
+    conn = sqlite3.connect('/home/pi/smart-heating/data/heating.db')
     get_temperatures_sql = 'SELECT * FROM heating_temperature WHERE status = %s' % TemperatureMeasurement.STATUS_NEW
     r = conn.execute(get_temperatures_sql)
     rows = r.fetchall()

@@ -54,18 +54,14 @@ openssl and libssl-dev are required for SSL support in python and is required by
 
 ### Setup the border router connection
 
-Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`. It should now look like this:
-```
-pi@jpi ~/smart-heating $ ls
-raspberry-pi  README.md
-```
+Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`.
 
 Create symbolic links
 
-* udev rules: `sudo ln -s /home/pi/smart-heating/raspberry-pi/rules.d/90-local.rules /etc/udev/rules.d/`
-* tunslip executable: `sudo ln -s /home/pi/smart-heating/raspberry-pi/bin/tunslip6 /bin/`
+* udev rules: `sudo ln -s /home/pi/smart-heating/rules.d/90-local.rules /etc/udev/rules.d/`
+* tunslip executable: `sudo ln -s /home/pi/smart-heating/bin/tunslip6 /bin/`
 
-Add this line to `/etc/rc.local` to make sure it is also executed on startup
+Add this line to `/etc/rc.local` to make sure the udev rule is also executed on startup
 ```
 udevadm trigger --verbose --action=add --subsystem-match=usb --attr-match=idVendor=0403 --attr-match=idProduct=6001
 ```
@@ -75,7 +71,7 @@ TODO check the line above. It doesn't seem to be working.
 Reboot: `sudo reboot`
 
 Attach the sky tmote usb dongle to the raspberry. The tun0 interface should be shown by `ifconfig`.
-In case of problems run `sudo ~/smart-heating/raspberry-pi/src/start_tunslip.sh` manually.
+In case of problems run `sudo ~/smart-heating/bin/start_tunslip.sh` manually.
 Determine the ipv6 address of the web service: `less /var/log/tunslip6`:
 
 ```
@@ -118,9 +114,9 @@ Setup crontab to run the log and upload scripts periodically.
 ```
 crontab -e
 # Insert these lines at the end of the file:
-*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/raspberry-pi/src/log_temperature.py >> /home/pi/smart-heating/raspberry-pi/src/log_temperature.log 2>>  /home/pi/smart-heating/raspberry-pi/src/log_temperature.err
-*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/raspberry-pi/src/upload.py >> /home/pi/smart-heating/raspberry-pi/src/upload.log 2>>  /home/pi/smart-heating/raspberry-pi/src/upload.err
+*/15 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/log.py
+*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/upload.py
 ```
 
-These commands ensure that the temperature is polled from the registered thermostats and uploaded to the server each 5 minutes but independently from each other.
-The output on `stdout` and `stderr` is logged to different files within the raspberry-pi directory. This logging mechanism was chosen for debugging purposes. However a simpler logging could also suffice your needs.
+These commands ensure that the temperature is polled from the registered thermostats each 15 minutes and checked for uploading to the server each 5 minutes.
+The scripts log interesting events to `~/smart-heating/logs/smart-heating.log`.
