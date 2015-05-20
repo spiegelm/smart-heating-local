@@ -113,7 +113,7 @@ class Server:
         """
         Captures the shell output of ifconfig and returns the first found MAC address
         """
-        out_binary = subprocess.check_output('ifconfig', shell=True, stderr=subprocess.STDOUT)
+        out_binary = subprocess.check_output('/sbin/ifconfig', shell=True, stderr=subprocess.STDOUT)
         out = out_binary.decode('ascii')
         lines = out.split()
 

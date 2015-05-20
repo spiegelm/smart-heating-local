@@ -4,6 +4,7 @@ import shelve
 
 import sqlite3
 import traceback
+from smart_heating_local.config import Config
 
 from smart_heating_local.models import TemperatureMeasurement
 from smart_heating_local.server import Server
@@ -27,11 +28,9 @@ def download_linked_thermostats():
 
     logging.info('End fetching linked thermostats.')
 
-    with shelve.open('data/config') as config:
-        config['thermostat_macs'] = thermostat_macs
-        config.sync()
-        logging.info('Wrote downloaded thermostat MACs to shelf "config".')
-        config.close()
+    config = Config()
+    config.save_thermostat_macs(thermostat_macs)
+    logging.info('Wrote downloaded thermostat MACs to config.')
 
 
 def upload_measurements():
