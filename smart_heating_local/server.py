@@ -3,12 +3,12 @@ import json
 import requests
 import subprocess
 
-class HttpError(Exception):
+class Error(Exception):
     def __init__(self, response, *args, permanent=False, **kwargs):
         self.permanent = permanent
         self.response = response
 
-class NotFoundException(HttpError):
+class NotFoundException(Error):
     pass
 
 class Server:
@@ -61,7 +61,7 @@ class Server:
 
         if not (200 <= r.status_code < 300):
             # Handle error
-            default_exception = HttpError('Failed to upload measurement %s, Result: %s %s' %
+            default_exception = Error('Failed to upload measurement %s, Result: %s %s' %
                                           (temperature_measurement, r.status_code, r.text))
 
             if r.status_code == 400:
