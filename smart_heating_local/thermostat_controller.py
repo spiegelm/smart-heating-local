@@ -1,5 +1,7 @@
 import sqlite3
 import asyncio
+from asyncio.tasks import async
+import aiocoap
 from aiocoap import *
 
 import copy
@@ -33,63 +35,62 @@ def ipv6(mac_addr):
     # Prefix from border router
     return 'fdfd::221:' + ip
 
-@asyncio.coroutine
-def get_temperature(thermostat):
 
-    mac = thermostat[0]
-    url = 'coap://[' + ipv6(mac) + ']/sensors/temperature'
-    print(url)
-    timestamp = str(datetime.now())
+def coap_request(url, method):
+    logging.debug('%s %s' % (method, url))
 
     protocol = yield from Context.create_client_context()
-    
-    request = Message(code=GET)
+
+    request = Message(code=method)
     request.set_request_uri(url)
-    
+
     try:
         response = yield from protocol.request(request).response
+    except aiocoap.error.RequestTimedOut as e:
+        logging.error('Request timed out: %s %s' % (request.code, url))
     except Exception as e:
-        logging.error('Failed to get temperature: ' + url)
-        print('Failed to fetch resource:')
-        print(e)
+        logging.error('Request failed: %s %s' % (request.code, url))
+        logging.exception(e)
+        return None
     else:
-        payload = str(response.payload, "utf-8") # sys.stdout.encoding
-        print('Result: %s\n%r'%(response.code, payload))
+        # Replace payload bytes with encoded string
+        response.payload = str(response.payload, "utf-8")
+        logging.info('%s %s: %s, %r' % (request.code, url, response.code, response.payload))
+        return response
 
+
+@asyncio.coroutine
+def get_temperature(thermostat):
+    mac = thermostat[0]
+    url = 'coap://[' + ipv6(mac) + ']/sensors/temperature'
+    timestamp = str(datetime.now())
+
+    response = yield from async(coap_request(url, Code.GET))
+
+    if response is not None:
         code = parse_coap_response_code(response.code)
         if 2 <= code < 3:
             temperature = float(response.payload)
             results.append([mac, timestamp, temperature])
 
-    # if re.match(temp_regex, str(temperature)):
-        # return mac, timestamp, temperature
-    # else:
-        # return mac, timestamp, "99.99"
 
 @asyncio.coroutine
 def get_heartbeat(thermostat):
     mac = thermostat[0]
     url = 'coap://[' + ipv6(mac) + ']/debug/heartbeat'
     timestamp = str(datetime.now())
-    
-    protocol = yield from Context.create_client_context()
-    
-    request = Message(code=GET)
-    request.set_request_uri(url)
-    
-    try:
-        response = yield from protocol.request(request).response
-    except Exception as e:
-        print('Failed to fetch resource:')
-        print(e)
-    else:
-        payload = str(response.payload, "utf-8") # sys.stdout.encoding
-        print('Result: %s\n%r'%(response.code, payload))
 
-        code = parse_coap_response_code(response.code)    
+    response = yield from async(coap_request(url, Code.GET))
+
+    if response is not None:
+        code = parse_coap_response_code(response.code)
         if 2 <= code < 3:
-            version, uptime, rssi = map(lambda x: x.split(':')[1], str(payload).split(','))
-            print (version, uptime, rssi)
+            version, uptime, rssi = map(lambda x: x.split(':')[1], str(response.payload).split(','))
+
+            # TODO return version and uptime
+            # print (version, uptime, rssi)
+
+            # results.append({'mac': mac, 'timestamp': timestamp, 'rssi': rssi})
             results.append([mac, timestamp, rssi])
 
 
@@ -135,19 +136,19 @@ def log_temperatures():
     cur = conn.cursor()
 
     # Get temperature values
-    temp_measurements = execute_tasks([asyncio.async(get_temperature(t)) for t in thermostats])
     # Execute tasks and wait
-    for mac, ts, temp in temp_measurements:
-        print (mac, ts, temp)
+    temp_measurements = execute_tasks([async(get_temperature(t)) for t in thermostats])
 
-
-    new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")" for mac, ts, temp in temp_measurements])
-    cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
+    if len(temp_measurements) > 0:
+        new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")" for mac, ts, temp in temp_measurements])
+        cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
 
     # Get RSSI values
-    rssi_measurements = execute_tasks([asyncio.async(get_heartbeat(t)) for t in thermostats])
-    new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +")" for mac, ts, rssi in rssi_measurements])
-    cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi) VALUES " + new_values + ";")
+    rssi_measurements = execute_tasks([async(get_heartbeat(t)) for t in thermostats])
+
+    if len(temp_measurements) > 0:
+        new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +")" for mac, ts, rssi in rssi_measurements])
+        cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi) VALUES " + new_values + ";")
 
     # Commit and close DB
     conn.commit()
@@ -159,5 +160,4 @@ def log_temperatures():
        # put_measurements('http://webofenergy.inf.ethz.ch:8082/measurements/rssi', rssi_measurements)
     # except:
        # pass
-
 
