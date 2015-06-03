@@ -50,16 +50,16 @@ openssl and libssl-dev are required for SSL support in python and is required by
 > python3.4 setup.py install
 > ```
 
-## Setup smart-heating
+## Setup smart-heating-local
 
 ### Setup the border router connection
 
-Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating.git`.
+Clone this repository into your home folder: `git clone https://github.com/spiegelm/smart-heating-local.git`.
 
 Create symbolic links
 
-* udev rules: `sudo ln -s /home/pi/smart-heating/rules.d/90-local.rules /etc/udev/rules.d/`
-* tunslip executable: `sudo ln -s /home/pi/smart-heating/bin/tunslip6 /bin/`
+* udev rules: `sudo ln -s /home/pi/smart-heating-local/rules.d/90-local.rules /etc/udev/rules.d/`
+* tunslip executable: `sudo ln -s /home/pi/smart-heating-local/bin/tunslip6 /bin/`
 
 Add this line to `/etc/rc.local` to make sure the udev rule is also executed on startup
 ```
@@ -71,7 +71,7 @@ TODO check the line above. It doesn't seem to be working.
 Reboot: `sudo reboot`
 
 Attach the sky tmote usb dongle to the raspberry. The tun0 interface should be shown by `ifconfig`.
-In case of problems run `sudo ~/smart-heating/bin/start_tunslip.sh` manually.
+In case of problems run `sudo ~/smart-heating-local/bin/start_tunslip.sh` manually.
 Determine the ipv6 address of the web service: `less /var/log/tunslip6`:
 
 ```
@@ -88,7 +88,8 @@ Neighbors<pre>fe80::221:2eff:ff00:22d3
 </pre></body></html>
 ```
 
-Test route to the thermostat by requesting the current temperature via coap-client (libcoap): `~/smart-heating/raspberry-pi/bin/coap-client -m get coap://[fdfd::221:2eff:ff00:22d3]/sensors/temperature`
+Test route to the thermostat by requesting the current temperature via coap-client (libcoap):
+`~/smart-heating-local/bin/coap-client -m get coap://[fdfd::221:2eff:ff00:22d3]/sensors/temperature`
 ```
 v:1 t:0 tkl:0 c:1 id:11708
 22.49
@@ -103,7 +104,7 @@ Install pip: https://pip.pypa.io/en/latest/installing.html
 Install the project requirements:
 
 ```
-cd ~/smart-heating/raspberry-pi/
+cd ~/smart-heating-local/
 pip install -r requirements.txt
 ```
 
@@ -114,9 +115,9 @@ Setup crontab to run the log and upload scripts periodically.
 ```
 crontab -e
 # Insert these lines at the end of the file:
-*/15 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/log.py
-*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating/upload.py
+*/15 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating-local/log.py
+*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating-local/upload.py
 ```
 
 These commands ensure that the temperature is polled from the registered thermostats each 15 minutes and checked for uploading to the server each 5 minutes.
-The scripts log interesting events to `~/smart-heating/logs/smart-heating.log`.
+The scripts log interesting events to `~/smart-heating-local/logs/smart-heating.log`.
