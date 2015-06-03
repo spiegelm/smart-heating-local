@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sqlite3
 import traceback
 from smart_heating_local.config import Config
@@ -66,7 +65,3 @@ def upload_measurements():
 def main():
     upload_measurements()
     download_linked_thermostats()
-
-
-if __name__ == "__main__":
-    main()
