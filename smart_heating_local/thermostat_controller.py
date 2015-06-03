@@ -202,7 +202,7 @@ def get_thermostats():
 
 def log_temperatures():
     thermostats = get_thermostats()
-    conn = sqlite3.connect('/home/pi/smart-heating/data/heating.db')
+    conn = sqlite3.connect('/home/pi/smart-heating-local/data/heating.db')
 
     # Make sure local tables are available
     create_temperature_table_sql = "CREATE TABLE IF NOT EXISTS heating_temperature (" \

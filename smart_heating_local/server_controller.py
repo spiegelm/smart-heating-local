@@ -30,7 +30,7 @@ def download_linked_thermostats():
 
 def upload_measurements():
 
-    conn = sqlite3.connect('/home/pi/smart-heating/data/heating.db')
+    conn = sqlite3.connect('/home/pi/smart-heating-local/data/heating.db')
     get_temperatures_sql = 'SELECT * FROM heating_temperature WHERE status = %s' % TemperatureMeasurement.STATUS_NEW
     r = conn.execute(get_temperatures_sql)
     rows = r.fetchall()
