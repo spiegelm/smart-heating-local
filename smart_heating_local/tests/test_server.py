@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-
 import unittest
-from server import Server
-from server_models import *
+from smart_heating_local.server import Server
+from smart_heating_local.server_models import *
 
 
 class ServerTestCase(unittest.TestCase):
