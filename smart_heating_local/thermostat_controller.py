@@ -35,34 +35,50 @@ def ipv6(mac_addr):
     # Prefix from border router
     return 'fdfd::221:' + ip
 
+def coap_url(mac_addr):
+    return 'coap://[' + ipv6(mac_addr) + ']'
 
-def coap_request(url, method):
-    logging.debug('%s %s' % (method, url))
+def coap_request(url, method, payload=None):
+    if payload is None:
+        request_str = '%s %s' % (method, url)
+    else:
+        request_str = '%s %s "%s"' % (method, url, payload)
+    logging.info(request_str)
 
     protocol = yield from Context.create_client_context()
 
-    request = Message(code=method)
+    if isinstance(payload, float) or isinstance(payload, int):
+        payload = str(payload)
+
+    if payload is None:
+        encoded_payload = b''
+    elif isinstance(payload, str):
+        encoded_payload = bytearray(payload, 'utf-8')
+    else:
+        raise Exception("Unexpected payload type")
+
+    request = Message(code=method, payload=encoded_payload)
     request.set_request_uri(url)
 
     try:
         response = yield from protocol.request(request).response
     except aiocoap.error.RequestTimedOut as e:
-        logging.error('Request timed out: %s %s' % (request.code, url))
+        logging.error('Request timed out: %s' % request_str)
     except Exception as e:
-        logging.error('Request failed: %s %s' % (request.code, url))
+        logging.error('Request failed: %s' % request_str)
         logging.exception(e)
         return None
     else:
         # Replace payload bytes with encoded string
-        response.payload = str(response.payload, "utf-8")
-        logging.info('%s %s: %s, %r' % (request.code, url, response.code, response.payload))
+        response.payload = str(response.payload, 'utf-8')
+        logging.info('%s: %s, %r' % (request_str, response.code, response.payload))
         return response
 
 
 @asyncio.coroutine
 def get_temperature(thermostat):
     mac = thermostat[0]
-    url = 'coap://[' + ipv6(mac) + ']/sensors/temperature'
+    url = coap_url(mac) + '/sensors/temperature'
     timestamp = str(datetime.now())
 
     response = yield from async(coap_request(url, Code.GET))
@@ -77,7 +93,7 @@ def get_temperature(thermostat):
 @asyncio.coroutine
 def get_heartbeat(thermostat):
     mac = thermostat[0]
-    url = 'coap://[' + ipv6(mac) + ']/debug/heartbeat'
+    url = coap_url(mac) + '/debug/heartbeat'
     timestamp = str(datetime.now())
 
     response = yield from async(coap_request(url, Code.GET))
@@ -92,6 +108,75 @@ def get_heartbeat(thermostat):
 
             # results.append({'mac': mac, 'timestamp': timestamp, 'rssi': rssi})
             results.append([mac, timestamp, rssi])
+
+def get_mode(mac):
+    url = coap_url(mac) + '/set/mode'
+    response = yield from async(coap_request(url, Code.GET))
+
+    if response is not None:
+        code = parse_coap_response_code(response.code)
+        if 2 <= code < 3:
+            return str(response.payload)
+    return None
+
+
+@asyncio.coroutine
+def set_target_mode(mac):
+    logging.info("Ensure target mode for %s" % mac)
+
+    # Desired mode
+    target_mode = 'manual target'
+
+    # Check if the desired mode is already set
+    current_mode = yield from async(get_mode(mac))
+    if current_mode == target_mode:
+        # Already set, nothing to do here
+        return
+
+    # Set mode
+    url = coap_url(mac) + '/set/mode'
+    response = yield from async(coap_request(url, Code.PUT, target_mode))
+
+    if response is not None:
+        code = parse_coap_response_code(response.code)
+        if 2 <= code < 3:
+            results.append({'payload': response.payload})
+
+
+def get_target_temperature(mac):
+    url = coap_url(mac) + '/set/target'
+    response = yield from async(coap_request(url, Code.GET))
+
+    if response is not None:
+        code = parse_coap_response_code(response.code)
+        if 2 <= code < 3:
+            return float(response.payload)
+    return None
+
+
+@asyncio.coroutine
+def set_target_temperature(mac, target_temperature):
+
+    # Check if the desired target is already set
+    current_target = yield from async(get_target_temperature(mac))
+    if current_target == target_temperature:
+        # Already set, nothing to do here
+        return
+
+    # Set target temperature
+    url = coap_url(mac) + '/set/target'
+    response = yield from async(coap_request(url, Code.PUT, target_temperature))
+
+    result = dict()
+    result['url'] = url
+    if response is not None:
+        code = parse_coap_response_code(response.code)
+        result['code'] = code
+        if 2 <= code < 3:
+            result['target'] = target_temperature
+    else:
+        result['error'] = True
+    results.append(result)
 
 
 def execute_tasks(tasks):
@@ -161,3 +246,13 @@ def log_temperatures():
     # except:
        # pass
 
+def set_target_temperatures():
+    thermostats = get_thermostats()
+
+    # Ensure target mode is set
+    modes = execute_tasks([asyncio.async(set_target_mode(thermostat[0])) for thermostat in thermostats])
+    print(modes)
+
+    # Set temperature values
+    target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat[0], 25.5)) for thermostat in thermostats])
+    print(target_temperatures)
