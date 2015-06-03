@@ -66,3 +66,4 @@ class Thermostat(Model):
         self.rfid = json.get('rfid')
         self.url = json.get('url')
         self.temperatures_url = json.get('temperatures_url')
+        self.heating_table_url = json.get('heating_table_url')

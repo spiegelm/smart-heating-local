@@ -9,23 +9,41 @@ import requests
 
 from smart_heating_local import logging
 
-def download_linked_thermostats():
-
-    logging.info('Start fetching linked thermostats.')
-
+def get_thermostat_devices():
     # Detect local mac address
     local_mac = Server().get_local_mac_address()
 
     # Get thermostat MACs
     raspberry = RaspberryDevice.load(mac=local_mac)
     thermostat_devices = raspberry.thermostat_devices
+
+    return thermostat_devices
+
+def download_linked_thermostats():
+    thermostat_devices = get_thermostat_devices()
     thermostat_macs = [thermostat_device.mac for thermostat_device in thermostat_devices]
 
-    logging.info('End fetching linked thermostats.')
-
-    config = Config()
-    config.save_thermostat_macs(thermostat_macs)
+    Config().save_thermostat_macs(thermostat_macs)
     logging.info('Wrote downloaded thermostat MACs to config.')
+
+def download_heating_table():
+    thermostat_devices = get_thermostat_devices()
+
+    for thermostat_device in thermostat_devices:
+        mac = thermostat_device.mac
+        heating_table_url = thermostat_device.thermostat.heating_table_url
+
+        # Request heating table
+        response = requests.get(heating_table_url)
+        assert(200 <= response.status_code < 300)
+        heating_table_entries = response.json()
+
+        current = Config().get_heating_table(mac)
+        if current != heating_table_entries:
+            # Save new schedule
+            Config().save_heating_table(mac, heating_table_entries)
+            logging.info("New config: Heating Table for %s" % mac)
+            # TODO assign new temperature
 
 
 def upload_measurements():
@@ -65,3 +83,4 @@ def upload_measurements():
 def main():
     upload_measurements()
     download_linked_thermostats()
+    download_heating_table()
