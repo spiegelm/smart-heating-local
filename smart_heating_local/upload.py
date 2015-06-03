@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-import logging
-import shelve
-
 import sqlite3
 import traceback
 from smart_heating_local.config import Config
@@ -9,10 +6,9 @@ from smart_heating_local.config import Config
 from smart_heating_local.models import TemperatureMeasurement
 from smart_heating_local.server import Server
 from smart_heating_local.server_models import RaspberryDevice
-import sys
 import requests
 
-import smart_heating_local.logger
+from smart_heating_local import logging
 
 def download_linked_thermostats():
 

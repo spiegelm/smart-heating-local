@@ -1,26 +1,11 @@
-import shelve
-
-import subprocess
 import sqlite3
-import threading
-import datetime
-from multiprocessing import Pool
-import re
-import time
-import json
-#import urllib2
-
-# aiocoap imports
-import logging
 import asyncio
 from aiocoap import *
 
-import copy, sys
+import copy
 from smart_heating_local.config import Config
-
 from smart_heating_local.models import *
-
-import smart_heating_local.logger
+from smart_heating_local import logging
 
 # Temperature regex (make sure we only match temperature)
 #temp_regex = r'\d{2}\.\d{2}'
@@ -64,6 +49,7 @@ def get_temperature(thermostat):
     try:
         response = yield from protocol.request(request).response
     except Exception as e:
+        logging.error('Failed to get temperature: ' + url)
         print('Failed to fetch resource:')
         print(e)
     else:
@@ -107,22 +93,14 @@ def get_heartbeat(thermostat):
             results.append([mac, timestamp, rssi])
 
 
-def put_measurements(url, measurements):
-   opener = urllib2.build_opener(urllib2.HTTPHandler)
-   request = urllib2.Request(url, data=json.dumps(measurements))
-   request.add_header('Content-Type', 'application/json')
-   request.get_method = lambda: 'PUT'
-   url = opener.open(request)
-
-
 def execute_tasks(tasks):
     asyncio.get_event_loop().run_until_complete(asyncio.wait(tasks))
     temp = copy.deepcopy(results)
     results.clear()
-    return temp;
+    return temp
 
 
-def main():
+def get_thermostats():
     # Load config from shelve
     config = Config()
     thermostat_macs = config.get_thermostat_macs()
@@ -133,7 +111,11 @@ def main():
         return
     # Store thermostats
     thermostats = [(mac, 'Stub name') for mac in thermostat_macs]
+    return thermostats
 
+
+def log():
+    thermostats = get_thermostats()
     conn = sqlite3.connect('/home/pi/smart-heating/data/heating.db')
 
     # Make sure local tables are available
@@ -150,11 +132,7 @@ def main():
     conn.execute(create_rssi_table_sql)
     conn.commit()
 
-    # Create threadpool and run query
-    # pool = Pool(processes=5)
     cur = conn.cursor()
-
-    # temp_measurements = pool.map(get_temperature, thermostats)
 
     # Get temperature values
     temp_measurements = execute_tasks([asyncio.async(get_temperature(t)) for t in thermostats])
@@ -175,7 +153,7 @@ def main():
     conn.commit()
     conn.close()
 
-    # Finally upload data to webofenergy (do nothing if it doesn't work)
+    # Finally upload data (do nothing if it doesn't work)
     #try:
        # put_measurements('http://webofenergy.inf.ethz.ch:8082/measurements/temperature', temp_measurements)
        # put_measurements('http://webofenergy.inf.ethz.ch:8082/measurements/rssi', rssi_measurements)
@@ -183,5 +161,3 @@ def main():
        # pass
 
 
-if __name__ == "__main__":
-    main()
