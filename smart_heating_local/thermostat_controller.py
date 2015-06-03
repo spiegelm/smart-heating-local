@@ -114,7 +114,7 @@ def get_thermostats():
     return thermostats
 
 
-def log():
+def log_temperatures():
     thermostats = get_thermostats()
     conn = sqlite3.connect('/home/pi/smart-heating/data/heating.db')
 

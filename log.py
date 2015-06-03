@@ -1,4 +1,4 @@
 #!/usr/bin/env python3
-from smart_heating_local import log_temperature
+from smart_heating_local import thermostat_controller
 
-log_temperature.log()
+thermostat_controller.log_temperatures()
