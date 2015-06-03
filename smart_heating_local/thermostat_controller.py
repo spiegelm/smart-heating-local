@@ -76,9 +76,8 @@ def coap_request(url, method, payload=None):
 
 
 @asyncio.coroutine
-def get_temperature(thermostat):
-    mac = thermostat[0]
-    url = coap_url(mac) + '/sensors/temperature'
+def get_temperature(thermostat_mac):
+    url = coap_url(thermostat_mac) + '/sensors/temperature'
     timestamp = str(datetime.now())
 
     response = yield from async(coap_request(url, Code.GET))
@@ -87,13 +86,12 @@ def get_temperature(thermostat):
         code = parse_coap_response_code(response.code)
         if 2 <= code < 3:
             temperature = float(response.payload)
-            results.append([mac, timestamp, temperature])
+            results.append([thermostat_mac, timestamp, temperature])
 
 
 @asyncio.coroutine
-def get_heartbeat(thermostat):
-    mac = thermostat[0]
-    url = coap_url(mac) + '/debug/heartbeat'
+def get_heartbeat(thermostat_mac):
+    url = coap_url(thermostat_mac) + '/debug/heartbeat'
     timestamp = str(datetime.now())
 
     response = yield from async(coap_request(url, Code.GET))
@@ -107,10 +105,10 @@ def get_heartbeat(thermostat):
             # print (version, uptime, rssi)
 
             # results.append({'mac': mac, 'timestamp': timestamp, 'rssi': rssi})
-            results.append([mac, timestamp, rssi])
+            results.append([thermostat_mac, timestamp, rssi])
 
-def get_mode(mac):
-    url = coap_url(mac) + '/set/mode'
+def get_mode(thermostat_mac):
+    url = coap_url(thermostat_mac) + '/set/mode'
     response = yield from async(coap_request(url, Code.GET))
 
     if response is not None:
@@ -196,7 +194,7 @@ def get_thermostats():
         logging.error('No thermostats defined in local config!')
         return
     # Store thermostats
-    thermostats = [(mac, 'Stub name') for mac in thermostat_macs]
+    thermostats = [{'mac': mac} for mac in thermostat_macs]
     return thermostats
 
 
@@ -222,14 +220,15 @@ def log_temperatures():
 
     # Get temperature values
     # Execute tasks and wait
-    temp_measurements = execute_tasks([async(get_temperature(t)) for t in thermostats])
+    temp_measurements = execute_tasks([async(get_temperature(thermostat['mac'])) for thermostat in thermostats])
 
     if len(temp_measurements) > 0:
-        new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")" for mac, ts, temp in temp_measurements])
+        new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")"
+                                for mac, ts, temp in temp_measurements])
         cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
 
     # Get RSSI values
-    rssi_measurements = execute_tasks([async(get_heartbeat(t)) for t in thermostats])
+    rssi_measurements = execute_tasks([async(get_heartbeat(thermostat['mac'])) for thermostat in thermostats])
 
     if len(temp_measurements) > 0:
         new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +")" for mac, ts, rssi in rssi_measurements])
@@ -249,10 +248,13 @@ def log_temperatures():
 def set_target_temperatures():
     thermostats = get_thermostats()
 
+    # for thermostat in thermostats:
+    #     heating_table = Config().get_heating_table(thermostat['mac'])
+
     # Ensure target mode is set
-    modes = execute_tasks([asyncio.async(set_target_mode(thermostat[0])) for thermostat in thermostats])
+    modes = execute_tasks([asyncio.async(set_target_mode(thermostat['mac'])) for thermostat in thermostats])
     print(modes)
 
     # Set temperature values
-    target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat[0], 25.5)) for thermostat in thermostats])
+    target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat['mac'], 25.5)) for thermostat in thermostats])
     print(target_temperatures)
