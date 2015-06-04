@@ -245,16 +245,49 @@ def log_temperatures():
     # except:
        # pass
 
+def get_scheduled_temperature(thermostat_mac, heating_table):
+    if len(heating_table) == 0:
+        logging.warning("Heating table for %s is empty" % thermostat_mac)
+        return None
+
+    previous_entry = None
+    now = datetime.now()
+
+    # We assume the heating_table to be ordered by day and time. The ordering is done by the server.
+    # Traverse the heating table and store the latest tuple entry (day, time) less or equal to now
+    for entry in heating_table:
+        day = entry.get('day')
+        time = entry.get('time')
+        now_day = now.weekday()
+        now_time = str(now.time())
+
+        # print(day, time, "-", now_day, now_time)
+        if day <= now_day or (day == now_day and time <= now_time):
+            previous_entry = entry
+        else:
+            break
+
+    if previous_entry is None:
+        # No entry before now. Therefore the last entry in the schedule is still applicable
+        last_entry = heating_table[-1]
+        return last_entry.get('temperature')
+    return previous_entry.get('temperature')
+
 def set_target_temperatures():
     thermostats = get_thermostats()
 
-    # for thermostat in thermostats:
-    #     heating_table = Config().get_heating_table(thermostat['mac'])
+    for thermostat in thermostats:
+        thermostat_mac = thermostat['mac']
+        heating_table = Config().get_heating_table(thermostat_mac)
+        thermostat['target'] = get_scheduled_temperature(thermostat_mac, heating_table)
+
+    print(thermostats)
 
     # Ensure target mode is set
     modes = execute_tasks([asyncio.async(set_target_mode(thermostat['mac'])) for thermostat in thermostats])
     print(modes)
 
     # Set temperature values
-    target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat['mac'], 25.5)) for thermostat in thermostats])
+    target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat['mac'], thermostat['target']))
+                                         for thermostat in thermostats])
     print(target_temperatures)
