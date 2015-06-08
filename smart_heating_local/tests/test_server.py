@@ -8,7 +8,7 @@ class ServerTestCase(unittest.TestCase):
     """
     Tests the processing of the API.
     This test relies on the server availability and certain data to be available. It is therefore
-    not considered an isolated unit test but a system test which been used during development.
+    not considered an isolated unit test but a system test which has been used during development.
     """
 
     # TODO try requests-mock: https://pypi.python.org/pypi/requests-mock
