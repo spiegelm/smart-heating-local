@@ -2,22 +2,30 @@ import unittest
 import requests
 from smart_heating_local.server import Server
 from smart_heating_local.server_models import *
-
+from nose.plugins.attrib import attr
 
 class ServerTestCase(unittest.TestCase):
+    """
+    Tests the processing of the API.
+    This test relies on the server availability and certain data to be available. It is therefore
+    not considered an isolated unit test but a system test which has been used during development.
+    """
 
     # TODO try requests-mock: https://pypi.python.org/pypi/requests-mock
+
+    local_mac = 'b8:27:eb:ac:d0:8d'
 
     def setUp(self):
         self.server = Server()
         pass
 
+    @attr('local')
     def test_get_local_mac_address(self):
         local_mac = self.server.get_local_mac_address()
         self.assertEqual(local_mac, 'b8:27:eb:ac:d0:8d')
 
     def test_get_thermostats_by_residence(self):
-        local_mac = self.server.get_local_mac_address()
+        local_mac = self.local_mac
 
         raspberry = RaspberryDevice.load(mac=local_mac)
         thermostat_devices = raspberry.thermostat_devices
@@ -28,7 +36,7 @@ class ServerTestCase(unittest.TestCase):
         self.assertEqual(thermostat_device.mac, '2e:ff:ff:00:22:8b')
 
     def test_get_heating_table(self):
-        local_mac = self.server.get_local_mac_address()
+        local_mac = self.local_mac
         raspberry = RaspberryDevice.load(mac=local_mac)
         thermostat_devices = raspberry.thermostat_devices
         thermostat_device = thermostat_devices[0]
