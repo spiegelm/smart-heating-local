@@ -2,7 +2,7 @@ import unittest
 import requests
 from smart_heating_local.server import Server
 from smart_heating_local.server_models import *
-
+from nose.plugins.attrib import attr
 
 class ServerTestCase(unittest.TestCase):
 
@@ -14,6 +14,7 @@ class ServerTestCase(unittest.TestCase):
         self.server = Server()
         pass
 
+    @attr('local')
     def test_get_local_mac_address(self):
         local_mac = self.server.get_local_mac_address()
         self.assertEqual(local_mac, 'b8:27:eb:ac:d0:8d')
