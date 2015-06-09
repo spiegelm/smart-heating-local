@@ -115,8 +115,8 @@ Setup crontab to run the log and upload scripts periodically.
 ```
 crontab -e
 # Insert these lines at the end of the file:
-*/15 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating-local/log.py
-*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating-local/upload.py
+*/15 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating-local/thermostat_sync.py
+*/5 * * * * /usr/local/bin/python3.4 /home/pi/smart-heating-local/server_sync.py
 ```
 
 These commands ensure that the temperature is polled from the registered thermostats each 15 minutes and checked for uploading to the server each 5 minutes.

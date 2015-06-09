@@ -291,3 +291,7 @@ def set_target_temperatures():
     target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat['mac'], thermostat['target']))
                                          for thermostat in thermostats])
     print(target_temperatures)
+
+def main():
+    log_temperatures()
+    set_target_temperatures()
