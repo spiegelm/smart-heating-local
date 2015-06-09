@@ -211,7 +211,8 @@ def log_temperatures():
     create_rssi_table_sql = "CREATE TABLE IF NOT EXISTS heating_rssi (" \
                             "mac CHAR(20) NOT NULL," \
                             "timestamp TIMESTAMP NOT NULL," \
-                            "rssi FLOAT NOT NULL);"
+                            "rssi FLOAT NOT NULL," \
+                            "status INTEGER NOT NULL);"
     conn.execute(create_temperature_table_sql)
     conn.execute(create_rssi_table_sql)
     conn.commit()
@@ -231,8 +232,9 @@ def log_temperatures():
     rssi_measurements = execute_tasks([async(get_heartbeat(thermostat['mac'])) for thermostat in thermostats])
 
     if len(temp_measurements) > 0:
-        new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +")" for mac, ts, rssi in rssi_measurements])
-        cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi) VALUES " + new_values + ";")
+        new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +"," + str(MetaMeasurement.STATUS_NEW) + ")"
+                                for mac, ts, rssi in rssi_measurements])
+        cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi, status) VALUES " + new_values + ";")
 
     # Commit and close DB
     conn.commit()

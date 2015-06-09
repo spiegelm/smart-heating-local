@@ -48,7 +48,19 @@ class Server:
     def temperature_url(self, thermostat_url):
         return thermostat_url + 'temperature/'
 
-    def upload_measurement(self, temperature_measurement):
+    def meta_url(self, thermostat_url):
+        return thermostat_url + 'meta_entry/'
+
+    def is_connected(self):
+        try:
+            r = requests.get(self.SERVER_URL)
+        except requests.ConnectionError as e:
+            return False
+        else:
+            return True
+
+
+    def upload_temperature_measurement(self, temperature_measurement):
         mac = temperature_measurement.mac
         device_thermostat = self.device_thermostat(mac=mac)
 
@@ -63,6 +75,31 @@ class Server:
             # Handle error
             default_exception = Error('Failed to upload measurement %s, Result: %s %s' %
                                           (temperature_measurement, r.status_code, r.text))
+
+            if r.status_code == 400:
+                # TODO check for certain conditions that indicate a permanent error
+                # e.g. r.json=={"datetime":["This field must be unique."]}
+                # permanent_exception = default_exception
+                # permanent_exception.permanent = True
+                pass
+            raise default_exception
+
+    # TODO refactor the upload measurement methods
+    def upload_meta_measurement(self, meta_measurement):
+        mac = meta_measurement.mac
+        device_thermostat = self.device_thermostat(mac=mac)
+
+        thermostat_url = device_thermostat.get('thermostat').get('url')
+        data = json.dumps({'datetime': meta_measurement.date.isoformat(),
+                'rssi': meta_measurement.rssi})
+        headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
+
+        r = requests.post(self.meta_url(thermostat_url), data=data, headers=headers)
+
+        if not (200 <= r.status_code < 300):
+            # Handle error
+            default_exception = Error('Failed to upload measurement %s, Result: %s %s' %
+                                          (meta_measurement, r.status_code, r.text))
 
             if r.status_code == 400:
                 # TODO check for certain conditions that indicate a permanent error
