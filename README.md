@@ -1,4 +1,4 @@
-# smart-heating local [![Build Status](https://magnum.travis-ci.com/spiegelm/smart-heating-local.svg?token=uqu5q9gC3ZDdywezju6y&branch=master)](https://magnum.travis-ci.com/spiegelm/smart-heating-local)
+# smart-heating-local [![Build Status](https://magnum.travis-ci.com/spiegelm/smart-heating-local.svg?token=uqu5q9gC3ZDdywezju6y&branch=master)](https://magnum.travis-ci.com/spiegelm/smart-heating-local)
 
 ## Setup raspbian
 
