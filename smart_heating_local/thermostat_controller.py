@@ -198,55 +198,54 @@ def get_thermostats():
     thermostats = [{'mac': mac} for mac in thermostat_macs]
     return thermostats
 
-
-def log_temperatures():
-    thermostats = get_thermostats()
-    conn = sqlite3.connect('/home/pi/smart-heating-local/data/heating.db')
-
+def create_tables(conn):
     # Make sure local tables are available
     create_temperature_table_sql = "CREATE TABLE IF NOT EXISTS heating_temperature (" \
                                    "mac CHAR(20) NOT NULL," \
                                    "timestamp TIMESTAMP NOT NULL," \
                                    "temperature FLOAT NOT NULL," \
-                                   "status INTEGER NOT NULL);"
+                                   "status INTEGER NOT NULL," \
+                                   "attempts INTEGER NOT NULL DEFAULT 0);"
     create_rssi_table_sql = "CREATE TABLE IF NOT EXISTS heating_rssi (" \
                             "mac CHAR(20) NOT NULL," \
                             "timestamp TIMESTAMP NOT NULL," \
                             "rssi FLOAT NOT NULL," \
-                            "status INTEGER NOT NULL);"
+                            "status INTEGER NOT NULL," \
+                            "attempts INTEGER NOT NULL DEFAULT 0);"
     conn.execute(create_temperature_table_sql)
     conn.execute(create_rssi_table_sql)
     conn.commit()
 
-    cur = conn.cursor()
 
-    # Get temperature values
-    # Start tasks and wait
-    temp_measurements = execute_tasks([async(get_temperature(thermostat['mac'])) for thermostat in thermostats])
+def log_temperatures():
+    thermostats = get_thermostats()
 
-    if len(temp_measurements) > 0:
-        new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")"
-                                for mac, ts, temp in temp_measurements])
-        cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
+    # Open database connection using the with statement. Ensures the connection gets closed.
+    with sqlite3.connect('/home/pi/smart-heating-local/data/heating.db') as conn:
 
-    # Get RSSI values
-    # Start tasks and wait
-    rssi_measurements = execute_tasks([async(get_heartbeat(thermostat['mac'])) for thermostat in thermostats])
-    if len(rssi_measurements) > 0:
-        new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +"," + str(MetaMeasurement.STATUS_NEW) + ")"
-                                for mac, ts, rssi in rssi_measurements])
-        cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi, status) VALUES " + new_values + ";")
+        # Make sure local tables are available
+        create_tables(conn)
 
-    # Commit and close DB
-    conn.commit()
-    conn.close()
+        cur = conn.cursor()
 
-    # Finally upload data (do nothing if it doesn't work)
-    #try:
-       # put_measurements('http://webofenergy.inf.ethz.ch:8082/measurements/temperature', temp_measurements)
-       # put_measurements('http://webofenergy.inf.ethz.ch:8082/measurements/rssi', rssi_measurements)
-    # except:
-       # pass
+        # Get temperature values
+        # Start tasks and wait
+        temp_measurements = execute_tasks([async(get_temperature(thermostat['mac'])) for thermostat in thermostats])
+        if len(temp_measurements) > 0:
+            new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")"
+                                    for mac, ts, temp in temp_measurements])
+            cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
+
+        # Get RSSI values
+        # Start tasks and wait
+        rssi_measurements = execute_tasks([async(get_heartbeat(thermostat['mac'])) for thermostat in thermostats])
+        if len(rssi_measurements) > 0:
+            new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +"," + str(MetaMeasurement.STATUS_NEW) + ")"
+                                    for mac, ts, rssi in rssi_measurements])
+            cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi, status) VALUES " + new_values + ";")
+
+        # Commit
+        conn.commit()
 
 def get_scheduled_temperature(thermostat_mac, heating_table):
     if len(heating_table) == 0:
