@@ -11,18 +11,19 @@ class Measurement(object):
         STATUS_ERROR,
     )
 
-    def __init__(self, mac, date, status):
+    def __init__(self, mac, date, status, attempts):
         self.mac = mac
         self.date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
         if status is None:
             status = self.STATUS_NEW
         assert status in self.STATUSES
         self.status = status
+        self.attempts = attempts
 
 class TemperatureMeasurement(Measurement):
 
-    def __init__(self, mac, date, temperature, status):
-        super(TemperatureMeasurement, self).__init__(mac=mac, date=date, status=status)
+    def __init__(self, mac, date, temperature, status, attempts):
+        super(TemperatureMeasurement, self).__init__(mac=mac, date=date, status=status, attempts=attempts)
         self.temperature = temperature
 
     def __repr__(self):
@@ -30,8 +31,8 @@ class TemperatureMeasurement(Measurement):
 
 class MetaMeasurement(Measurement):
 
-    def __init__(self, mac, date, rssi, status):
-        super(MetaMeasurement, self).__init__(mac=mac, date=date, status=status)
+    def __init__(self, mac, date, rssi, status, attempts):
+        super(MetaMeasurement, self).__init__(mac=mac, date=date, status=status, attempts=attempts)
         self.rssi = rssi
 
     def __repr__(self):

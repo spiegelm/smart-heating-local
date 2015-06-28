@@ -9,6 +9,9 @@ import requests
 
 from smart_heating_local import logging
 
+# Maximal number of attempts to send a measurement to the server after marking it as a permanent error.
+MAX_ATTEMPTS = 5
+
 def get_thermostat_devices():
     # Detect local mac address
     local_mac = Server().get_local_mac_address()
@@ -62,22 +65,24 @@ def upload_temperatures():
             return
 
         for measurement in measurements:
-            update_status_sql = 'UPDATE heating_temperature SET status=:status WHERE mac=:mac AND timestamp=:date'
+            update_status_sql = 'UPDATE heating_temperature SET status=:status, attempts=attempts+1 WHERE mac=:mac AND timestamp=:date'
             try:
                 Server().upload_temperature_measurement(measurement)
                 conn.execute(update_status_sql, {'status': Measurement.STATUS_SENT, 'mac': measurement.mac, 'date': measurement.date})
                 conn.commit()
-                logging.info('upload successful: %s ' % repr(measurement))
+                logging.info('upload successful: %s. Attempt #%s' % (repr(measurement), measurement.attempts))
             except requests.ConnectionError as e:
                 # Log connection error but don't mark it as a permanent error
-                logging.error('Could not upload: %s' % repr(measurement))
+                conn.execute(update_status_sql, {'status': Measurement.STATUS_NEW, 'mac': measurement.mac, 'date': measurement.date})
+                conn.commit()
+                logging.error('Could not upload: %s. Attempt #%s' % (repr(measurement), measurement.attempts))
                 logging.error('%s: %s' % (e.__class__.__name__, e))
             except Exception as e:
-                # TODO update linked thermostats list. maybe we're trying to access a non linked thermostat
-                # Don't mark as permanent error for now. Watch the logs what kind of errors these are
-                # conn.execute(update_status_sql, {'status': Measurement.STATUS_ERROR, 'mac': measurement.mac, 'date': measurement.date})
-                # conn.commit()
-                logging.error('Could not upload: %s' % repr(measurement))
+                # Increase attempts. Mark as permanent error after to many attempts.
+                status = Measurement.STATUS_NEW if measurement.attempts < MAX_ATTEMPTS else Measurement.STATUS_ERROR
+                conn.execute(update_status_sql, {'status': status, 'mac': measurement.mac, 'date': measurement.date})
+                conn.commit()
+                logging.error('Could not upload: %s. Attempt #%s' % (repr(measurement), measurement.attempts))
                 logging.error(traceback.format_exc())
 
 def upload_meta_data():
@@ -96,22 +101,24 @@ def upload_meta_data():
             return
 
         for measurement in measurements:
-            update_status_sql = 'UPDATE heating_rssi SET status=:status WHERE mac=:mac AND timestamp=:date'
+            update_status_sql = 'UPDATE heating_rssi SET status=:status, attempts=attempts+1 WHERE mac=:mac AND timestamp=:date'
             try:
                 Server().upload_meta_measurement(measurement)
                 conn.execute(update_status_sql, {'status': Measurement.STATUS_SENT, 'mac': measurement.mac, 'date': measurement.date})
                 conn.commit()
-                logging.info('upload successful: %s ' % repr(measurement))
+                logging.info('upload successful: %s. Attempt #%s' % (repr(measurement), measurement.attempts))
             except requests.ConnectionError as e:
                 # Log connection error but don't mark it as a permanent error
-                logging.error('Could not upload: %s' % repr(measurement))
+                conn.execute(update_status_sql, {'status': Measurement.STATUS_NEW, 'mac': measurement.mac, 'date': measurement.date})
+                conn.commit()
+                logging.error('Could not upload: %s. Attempt #%s' % (repr(measurement), measurement.attempts))
                 logging.error('%s: %s' % (e.__class__.__name__, e))
             except Exception as e:
-                # TODO update linked thermostats list. maybe we're trying to access a non linked thermostat
-                # Don't mark as permanent error for now. Watch the logs what kind of errors these are
-                # conn.execute(update_status_sql, {'status': Measurement.STATUS_ERROR, 'mac': measurement.mac, 'date': measurement.date})
-                # conn.commit()
-                logging.error('Could not upload: %s' % repr(measurement))
+                # Increase attempts. Mark as permanent error after to many attempts.
+                status = Measurement.STATUS_NEW if measurement.attempts < MAX_ATTEMPTS else Measurement.STATUS_ERROR
+                conn.execute(update_status_sql, {'status': status, 'mac': measurement.mac, 'date': measurement.date})
+                conn.commit()
+                logging.error('Could not upload: %s. Attempt #%s' % (repr(measurement), measurement.attempts))
                 logging.error(traceback.format_exc())
 
 def main():
