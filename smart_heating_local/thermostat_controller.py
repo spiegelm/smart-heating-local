@@ -64,6 +64,7 @@ def coap_request(url, method, payload=None):
         response = yield from protocol.request(request).response
     except aiocoap.error.RequestTimedOut as e:
         logging.error('Request timed out: %s' % request_str)
+        return None
     except Exception as e:
         logging.error('Request failed: %s' % request_str)
         logging.exception(e)
@@ -220,7 +221,7 @@ def log_temperatures():
     cur = conn.cursor()
 
     # Get temperature values
-    # Execute tasks and wait
+    # Start tasks and wait
     temp_measurements = execute_tasks([async(get_temperature(thermostat['mac'])) for thermostat in thermostats])
 
     if len(temp_measurements) > 0:
@@ -229,9 +230,9 @@ def log_temperatures():
         cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
 
     # Get RSSI values
+    # Start tasks and wait
     rssi_measurements = execute_tasks([async(get_heartbeat(thermostat['mac'])) for thermostat in thermostats])
-
-    if len(temp_measurements) > 0:
+    if len(rssi_measurements) > 0:
         new_values = ", ".join(["('" + mac + "','" + ts + "'," + rssi +"," + str(MetaMeasurement.STATUS_NEW) + ")"
                                 for mac, ts, rssi in rssi_measurements])
         cur.execute("INSERT INTO heating_rssi (mac, timestamp, rssi, status) VALUES " + new_values + ";")
