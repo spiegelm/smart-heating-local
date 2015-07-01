@@ -1,1 +1,1 @@
-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", RUN+="/usr/bin/sudo /home/pi/smart-heating/raspberry-pi/src/start_tunslip.sh"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", RUN+="/usr/bin/sudo /home/pi/smart-heating-local/bin/start_tunslip.sh"
