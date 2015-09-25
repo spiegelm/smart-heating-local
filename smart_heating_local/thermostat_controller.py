@@ -3,6 +3,7 @@ import asyncio
 from asyncio.tasks import async
 import aiocoap
 from aiocoap import *
+import time
 
 import copy
 from smart_heating_local.config import Config
@@ -124,13 +125,16 @@ def set_target_mode(mac):
     logging.info("Ensure target mode for %s" % mac)
 
     # Desired mode
-    target_mode = 'manual target'
+    target_mode = 'radio target'
 
     # Check if the desired mode is already set
     current_mode = yield from async(get_mode(mac))
     if current_mode == target_mode:
         # Already set, nothing to do here
         return
+
+    # Wait
+    wait()
 
     # Set mode
     url = coap_url(mac) + '/set/mode'
@@ -162,6 +166,9 @@ def set_target_temperature(mac, target_temperature):
         # Already set, nothing to do here
         return
 
+    # Wait
+    wait()
+
     # Set target temperature
     url = coap_url(mac) + '/set/target'
     response = yield from async(coap_request(url, Code.PUT, target_temperature))
@@ -191,9 +198,9 @@ def get_thermostats():
     thermostat_macs = config.get_thermostat_macs()
     if thermostat_macs is None:
         # No thermostats configured
-        # TODO may trigger a manual sync?
         logging.error('No thermostats defined in local config!')
         return
+
     # Store thermostats
     thermostats = [{'mac': mac} for mac in thermostat_macs]
     return thermostats
@@ -235,6 +242,9 @@ def log_temperatures():
             new_values = ", ".join(["('" + mac + "','" + ts + "'," + str(temp) +"," + str(TemperatureMeasurement.STATUS_NEW) + ")"
                                     for mac, ts, temp in temp_measurements])
             cur.execute("INSERT INTO heating_temperature (mac, timestamp, temperature, status) VALUES " + new_values + ";")
+
+        # Between two requests, wait
+        wait()
 
         # Get RSSI values
         # Start tasks and wait
@@ -289,10 +299,20 @@ def set_target_temperatures():
     modes = execute_tasks([asyncio.async(set_target_mode(thermostat['mac'])) for thermostat in thermostats])
     print(modes)
 
+    # Wait
+    wait()
+
     # Set temperature values
     target_temperatures = execute_tasks([asyncio.async(set_target_temperature(thermostat['mac'], thermostat['target']))
                                          for thermostat in thermostats])
     print(target_temperatures)
+
+
+def wait():
+    """
+    Intended purpose is to give a low power device time to finish its last request.
+    """
+    time.sleep(3)
 
 def main():
     log_temperatures()
