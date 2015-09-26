@@ -166,21 +166,27 @@ def set_target_temperature(mac, target_temperature):
         # Already set, nothing to do here
         return
 
-    # Wait
-    wait()
-
     # Set target temperature
+    tries = 0
+    response = None
     url = coap_url(mac) + '/set/target'
-    response = yield from async(coap_request(url, Code.PUT, target_temperature))
-
     result = dict()
     result['url'] = url
-    if response is not None:
-        code = parse_coap_response_code(response.code)
-        result['code'] = code
-        if 2 <= code < 3:
-            result['target'] = target_temperature
-    else:
+
+    while response is None and tries < 3:
+        tries += 1
+        # Wait between requests
+        wait()
+
+        response = yield from async(coap_request(url, Code.PUT, target_temperature))
+
+        if response is not None:
+            code = parse_coap_response_code(response.code)
+            result['code'] = code
+            if 2 <= code < 3:
+                result['target'] = target_temperature
+
+    if response is None:
         result['error'] = True
     results.append(result)
 
