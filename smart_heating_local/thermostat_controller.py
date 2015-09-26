@@ -147,13 +147,26 @@ def set_target_mode(mac):
 
 
 def get_target_temperature(mac):
-    url = coap_url(mac) + '/set/target'
-    response = yield from async(coap_request(url, Code.GET))
 
-    if response is not None:
-        code = parse_coap_response_code(response.code)
-        if 2 <= code < 3:
-            return float(response.payload)
+    tries = 0
+    url = coap_url(mac) + '/set/target'
+    result = dict()
+    result['url'] = url
+
+    # Try the request up to 3 times
+    while tries < 3:
+        tries += 1
+
+        response = yield from async(coap_request(url, Code.GET))
+
+        if response is not None:
+            code = parse_coap_response_code(response.code)
+            if 2 <= code < 3:
+                return float(response.payload)
+
+        # Wait between requests
+        wait()
+
     return None
 
 
@@ -166,7 +179,7 @@ def set_target_temperature(mac, target_temperature):
         # Already set, nothing to do here
         return
 
-    # Wait
+    # Wait between requests
     wait()
 
     # Set target temperature
