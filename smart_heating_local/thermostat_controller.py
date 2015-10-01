@@ -10,10 +10,7 @@ from smart_heating_local.config import Config
 from smart_heating_local.models import *
 from smart_heating_local import logging
 
-# Temperature regex (make sure we only match temperature)
-#temp_regex = r'\d{2}\.\d{2}'
-
-# thread safe queue to store the results
+# Thread safe queue to store the results
 from collections import deque
 results = deque()
 
@@ -26,7 +23,9 @@ def parse_coap_response_code(response_code):
     #return str(response_code_class) + ".{:02d}".format(response_code_detail) # returns a string
 
 def ipv6(mac_addr):
-    # Convert MAC 2e:ff:ff:00:22:8b into IPv6 2eff:ff00:228b
+    """Convert MAC into IPv6 format.
+    E.g. 2e:ff:ff:00:22:8b to 2eff:ff00:228b
+    """
     bytes = mac_addr.replace(':', '')
     ip = ''
     for index, part in enumerate(bytes):
@@ -38,6 +37,17 @@ def ipv6(mac_addr):
 
 def coap_url(mac_addr):
     return 'coap://[' + ipv6(mac_addr) + ']'
+
+def is_successful_response(response):
+    """If a CoAP response is successful, i.e. not None and has a code between 2 and 3
+    :returns bool
+    """
+    if response is not None:
+         code = parse_coap_response_code(response.code)
+         if 2 <= code < 3:
+             return True
+    return False
+
 
 def coap_request(url, method, payload=None):
     if payload is None:
@@ -73,7 +83,11 @@ def coap_request(url, method, payload=None):
     else:
         # Replace payload bytes with encoded string
         response.payload = str(response.payload, 'utf-8')
-        logging.info('%s: %s, %r' % (request_str, response.code, response.payload))
+
+        # Log response
+        level = logging.INFO if is_successful_response(response) else logging.ERROR
+        logging.log(level, '%s: %s, %r' % (request_str, response.code, response.payload))
+
         return response
 
 
@@ -84,11 +98,9 @@ def get_temperature(thermostat_mac):
 
     response = yield from async(coap_request(url, Code.GET))
 
-    if response is not None:
-        code = parse_coap_response_code(response.code)
-        if 2 <= code < 3:
-            temperature = float(response.payload)
-            results.append([thermostat_mac, timestamp, temperature])
+    if is_successful_response(response):
+        temperature = float(response.payload)
+        results.append([thermostat_mac, timestamp, temperature])
 
 
 @asyncio.coroutine
@@ -98,25 +110,22 @@ def get_heartbeat(thermostat_mac):
 
     response = yield from async(coap_request(url, Code.GET))
 
-    if response is not None:
-        code = parse_coap_response_code(response.code)
-        if 2 <= code < 3:
-            version, uptime, rssi = map(lambda x: x.split(':')[1], str(response.payload).split(','))
+    if is_successful_response(response):
+        version, uptime, rssi = map(lambda x: x.split(':')[1], str(response.payload).split(','))
 
-            # TODO return version and uptime
-            # print (version, uptime, rssi)
+        # TODO return version and uptime
+        # print (version, uptime, rssi)
 
-            # results.append({'mac': mac, 'timestamp': timestamp, 'rssi': rssi})
-            results.append([thermostat_mac, timestamp, rssi])
+        # results.append({'mac': mac, 'timestamp': timestamp, 'rssi': rssi})
+        results.append([thermostat_mac, timestamp, rssi])
+
 
 def get_mode(thermostat_mac):
     url = coap_url(thermostat_mac) + '/set/mode'
     response = yield from async(coap_request(url, Code.GET))
 
-    if response is not None:
-        code = parse_coap_response_code(response.code)
-        if 2 <= code < 3:
-            return str(response.payload)
+    if is_successful_response(response):
+        return str(response.payload)
     return None
 
 
@@ -140,10 +149,8 @@ def set_target_mode(mac):
     url = coap_url(mac) + '/set/mode'
     response = yield from async(coap_request(url, Code.PUT, target_mode))
 
-    if response is not None:
-        code = parse_coap_response_code(response.code)
-        if 2 <= code < 3:
-            results.append({'payload': response.payload})
+    if is_successful_response(response):
+        results.append({'payload': response.payload})
 
 
 def get_target_temperature(mac):
@@ -159,10 +166,8 @@ def get_target_temperature(mac):
 
         response = yield from async(coap_request(url, Code.GET))
 
-        if response is not None:
-            code = parse_coap_response_code(response.code)
-            if 2 <= code < 3:
-                return float(response.payload)
+        if is_successful_response(response):
+            return float(response.payload)
 
         # Wait between requests
         wait()
@@ -212,7 +217,7 @@ def get_thermostats():
     if thermostat_macs is None:
         # No thermostats configured
         logging.error('No thermostats defined in local config!')
-        return
+        return []
 
     # Store thermostats
     thermostats = [{'mac': mac} for mac in thermostat_macs]
@@ -322,7 +327,8 @@ def set_target_temperatures():
 
 
 def wait():
-    """
+    """Wait 3 seconds.
+
     Intended purpose is to give a low power device time to finish its last request.
     """
     time.sleep(3)
