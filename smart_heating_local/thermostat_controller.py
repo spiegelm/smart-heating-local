@@ -142,15 +142,17 @@ def set_target_mode(mac):
         # Already set, nothing to do here
         return
 
-    # Wait
-    wait()
+    return
 
-    # Set mode
-    url = coap_url(mac) + '/set/mode'
-    response = yield from async(coap_request(url, Code.PUT, target_mode))
-
-    if is_successful_response(response):
-        results.append({'payload': response.payload})
+    # # Wait
+    # wait()
+    #
+    # # Set mode
+    # url = coap_url(mac) + '/set/mode'
+    # response = yield from async(coap_request(url, Code.PUT, target_mode))
+    #
+    # if is_successful_response(response):
+    #     results.append({'payload': response.payload})
 
 
 def get_target_temperature(mac):
