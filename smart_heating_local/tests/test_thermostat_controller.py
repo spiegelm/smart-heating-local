@@ -13,10 +13,8 @@ class ThermostatControllerTestCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    @attr('local')
     def test_ipv6(self):
         self.assertEqual(ipv6('2e:ff:ff:00:22:8b'), '2eff:ff00:228b')
 
-    @attr('local')
     def test_coap_url(self):
         self.assertEqual(coap_url('2e:ff:ff:00:22:8b'), 'coap://[2eff:ff00:228b]')
