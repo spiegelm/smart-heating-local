@@ -149,7 +149,6 @@ def upload_meta_data():
 def main():
     """
     Upload existing temperature and meta data and download current settings from the server.
-    :return:
     """
     upload_temperatures()
     upload_meta_data()
