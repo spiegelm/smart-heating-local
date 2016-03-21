@@ -141,7 +141,7 @@ class Server:
     def get_thermostats_macs(self):
         """
         Query and return the list of associated thermostat MAC addresses.
-        :rtype: List[str]
+        :rtype: list[str]
         """
         macs = []
         for rfid in self.get_thermostats_rfids():
@@ -155,7 +155,7 @@ class Server:
         """
         Query and return the List of thermostat RFIDs associated to the local MAC address.
         :return: List of thermostat RFIDs
-        :rtype: List[str]
+        :rtype: list[str]
         """
         raspberry_mac = self.get_local_mac_address()
         lookup_url = self.SERVER_URL + 'device/raspberry/lookup/?mac=' + raspberry_mac
@@ -181,7 +181,7 @@ class Server:
         Query and return the list of a rooms thermostats.
         :type room_url: str
         :return: List of thermostat dictionaries.
-        :rtype: List[dict]
+        :rtype: list[dict]
         """
         thermostats_url = room_url + 'thermostat/'
         r = requests.get(thermostats_url)

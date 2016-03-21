@@ -2,10 +2,17 @@ import requests
 
 
 class Model(object):
+    """
+    Base class for server models.
+    """
     SERVER_URL = 'http://52.28.68.182:8000/'
     pass
 
+
 class RaspberryDevice(Model):
+    """
+    Represents a physical raspberry device.
+    """
     RESOURCE_URL = 'device/raspberry/'
     LOOKUP_MAC_SUFFIX_PATTERN = 'lookup?mac={mac}'
 
@@ -19,27 +26,45 @@ class RaspberryDevice(Model):
         self.mac = json.get('mac')
         self.url = json.get('url')
         self.residence = Residence(json.get('residence'))
-        self.thermostat_devices = [ThermostatDevice(thermostat_json) for thermostat_json in json.get('thermostat_devices')]
+        self.thermostat_devices = [ThermostatDevice(thermostat_json) for thermostat_json in
+                                   json.get('thermostat_devices')]
 
     @staticmethod
     def load(rfid=None, mac=None):
+        """
+        :param rfid: RFID to identify the raspberry
+        :param mac: MAC address to identify the raspberry
+        :return: The associated raspberry device
+        """
         url = RaspberryDevice.__url(rfid=rfid, mac=mac)
         r = RaspberryDevice.requests.get(url)
-        assert(200 <= r.status_code < 300)
+        assert (200 <= r.status_code < 300)
         return RaspberryDevice(r.json())
 
     @staticmethod
     def __lookup_url(mac):
-        url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + RaspberryDevice.LOOKUP_MAC_SUFFIX_PATTERN.format(mac=mac)
+        """
+        :param mac: Raspberry MAC address to look for
+        :type mac: str
+        :return: The URL to query the raspberry device with the given MAC address
+        """
+        url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + RaspberryDevice.LOOKUP_MAC_SUFFIX_PATTERN.format(
+            mac=mac)
         return url
 
     @staticmethod
     def __url(rfid=None, mac=None):
+        """
+        :param rfid: The Raspberry RFID number
+        :param mac: The Raspberry MAC address
+        :return: The URL to query the raspberry device with the given RFID or MAC address
+        """
         if (rfid is None) == (mac is None):
             raise Exception('Either rfid or mac is required')
 
         if mac is not None:
-            url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + RaspberryDevice.LOOKUP_MAC_SUFFIX_PATTERN.format(mac=mac)
+            url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + RaspberryDevice.LOOKUP_MAC_SUFFIX_PATTERN.format(
+                mac=mac)
         else:
             assert rfid is not None
             url = RaspberryDevice.SERVER_URL + RaspberryDevice.RESOURCE_URL + rfid + '/'
@@ -47,6 +72,9 @@ class RaspberryDevice(Model):
 
 
 class ThermostatDevice(Model):
+    """
+    Represents a physical thermostat device.
+    """
 
     def __init__(self, json):
         self.rfid = json.get('rfid')
@@ -56,12 +84,20 @@ class ThermostatDevice(Model):
 
 
 class Residence(Model):
+    """
+    Represents a residence.
+    """
+
     def __init__(self, json):
         self.rfid = json.get('rfid')
         self.url = json.get('url')
 
 
 class Thermostat(Model):
+    """
+    Represents a thermostat.
+    """
+
     def __init__(self, json):
         self.rfid = json.get('rfid')
         self.url = json.get('url')

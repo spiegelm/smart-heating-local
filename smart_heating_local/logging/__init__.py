@@ -7,7 +7,6 @@ log_file = os.path.join(Config.PROJECT_ROOT, 'logs', 'smart-heating.log')
 
 logging_format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 basicConfig(level=INFO, format=logging_format)
-# logging.basicConfig(filename='upload.log', level=logging.INFO, format=logging_format)
 
 class NoRequestsModuleFilter(Filter):
     def filter(self, record):
