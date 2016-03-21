@@ -130,8 +130,8 @@ def upload_meta_data():
         rows = conn.execute(get_meta_sql).fetchall()
         measurements = [MetaMeasurement(*row) for row in rows]
 
-        # TODO improve error handling
-        # handle unlinked or invalid thermostat MACs
+        # Future work: improve error handling
+        # Handle unlinked or invalid thermostat MACs
 
         # Test for internet connection first
         if not Server().is_connected():
