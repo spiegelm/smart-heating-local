@@ -1,8 +1,25 @@
+"""
+Copyright 2016 Michael Spiegel, Wilhelm Kleiminger
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import unittest
 import requests
 from smart_heating_local.server import Server
 from smart_heating_local.server_models import *
 from nose.plugins.attrib import attr
+
 
 class ServerTestCase(unittest.TestCase):
     """
@@ -10,8 +27,6 @@ class ServerTestCase(unittest.TestCase):
     This test relies on the server availability and certain data to be available. It is therefore
     not considered an isolated unit test but a system test which has been used during development.
     """
-
-    # TODO try requests-mock: https://pypi.python.org/pypi/requests-mock
 
     local_mac = 'b8:27:eb:ac:d0:8d'
 
@@ -59,6 +74,7 @@ class ServerTestCase(unittest.TestCase):
         self.assertIsNotNone(first_entry.get('thermostat', None))
         self.assertIsInstance(first_entry.get('thermostat'), dict)
         self.assertIsNotNone(first_entry.get('thermostat').get('url', None))
+
 
 if __name__ == '__main__':
     unittest.main()
