@@ -1,4 +1,4 @@
-# smart-heating-local [![Build Status](https://magnum.travis-ci.com/spiegelm/smart-heating-local.svg?token=uqu5q9gC3ZDdywezju6y&branch=master)](https://magnum.travis-ci.com/spiegelm/smart-heating-local)
+# smart-heating-local [![Build Status](https://travis-ci.org/spiegelm/smart-heating-local.svg?branch=master)](https://travis-ci.org/spiegelm/smart-heating-local)
 
 This is the repository for the local part of the Distributed System Laboratory project *An Infrastructure for Smart Residential Heating Systems*:
 
