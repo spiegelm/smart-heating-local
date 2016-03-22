@@ -1,5 +1,12 @@
 # smart-heating-local [![Build Status](https://magnum.travis-ci.com/spiegelm/smart-heating-local.svg?token=uqu5q9gC3ZDdywezju6y&branch=master)](https://magnum.travis-ci.com/spiegelm/smart-heating-local)
 
+This is the repository for the local part of the Distributed System Laboratory project *An Infrastructure for Smart Residential Heating Systems*:
+
+- [spiegelm/smart-heating-server](https://github.com/spiegelm/smart-heating-server)
+- [**spiegelm/smart-heating-local**](https://github.com/spiegelm/smart-heating-local)
+- [Octoshape/smart-heating-app](https://github.com/Octoshape/smart-heating-app)
+- [spiegelm/smart-heating-report](https://github.com/spiegelm/smart-heating-report)
+
 ## Setup raspbian
 
 Flash raspbian to a SD card and boot the Raspberry. Find the IP address using `nmap -sP [ip-adress]/[bitmask]`, e.g. `nmap -sP 192.168.0.0/24`.
