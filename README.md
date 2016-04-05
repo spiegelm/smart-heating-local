@@ -73,8 +73,6 @@ Add this line to `/etc/rc.local` to make sure the udev rule is also executed on 
 udevadm trigger --verbose --action=add --subsystem-match=usb --attr-match=idVendor=0403 --attr-match=idProduct=6001
 ```
 
-TODO check the line above. It doesn't seem to be working.
-
 Reboot: `sudo reboot`
 
 Attach the sky tmote usb dongle to the raspberry. The tun0 interface should be shown by `ifconfig`.
